@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Panel Parade – Buster Brown Test</title>
+  <title>Panel Parade – JSON Layout Editor</title>
 
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
@@ -45,15 +45,6 @@
       cursor: move;
     }
 
-    .bubble[contenteditable="true"]:focus {
-      outline: 2px solid #0078d4;
-      background: rgba(255, 255, 255, 0.6);
-    }
-
-    #controls {
-      margin-bottom: 15px;
-    }
-
     #layoutOutput {
       width: 100%;
       height: 200px;
@@ -72,141 +63,147 @@
 
   <div class="panel">
     <img src="images/Buster Brown empty bubbles test1.jpg">
-
-    <div class="bubble" id="bubble1" contenteditable="true"
-         style="top: 140px; left: 140px; width: 260px; height: 110px;">
-      Bubble 1
-    </div>
-
-    <div class="bubble" id="bubble2" contenteditable="true"
-         style="top: 360px; left: 140px; width: 240px; height: 100px;">
-      Bubble 2
-    </div>
-
-    <div class="bubble" id="bubble3" contenteditable="true"
-         style="top: 650px; left: 140px; width: 240px; height: 110px;">
-      Bubble 3
-    </div>
-
-    <div class="bubble" id="bubble4" contenteditable="true"
-         style="top: 620px; left: 520px; width: 280px; height: 130px;">
-      Bubble 4
-    </div>
-
-    <div class="bubble" id="bubble5" contenteditable="true"
-         style="top: 780px; left: 620px; width: 200px; height: 80px;">
-      Bubble 5
-    </div>
+    <div id="bubbleContainer"></div>
   </div>
 
-  <textarea id="layoutOutput" placeholder="Saved layout will appear here..."></textarea>
+  <textarea id="layoutOutput" placeholder="Saved JSON will appear here..."></textarea>
 
   <script>
     let editorMode = true;
+    let bubbles = [];
 
-    function enableEditorMode() {
-      editorMode = true;
-      document.getElementById("toggleMode").textContent = "Switch to User Mode";
-      document.getElementById("saveLayout").style.display = "inline-block";
-
-      document.querySelectorAll('.bubble').forEach(b => {
-        b.style.outline = "1px dashed red";
-        b.style.cursor = "move";
-      });
+    async function loadLayout() {
+      const response = await fetch("layout.json");
+      bubbles = await response.json();
+      renderBubbles();
     }
 
-    function enableUserMode() {
-      editorMode = false;
-      document.getElementById("toggleMode").textContent = "Switch to Editor Mode";
-      document.getElementById("saveLayout").style.display = "none";
+    function renderBubbles() {
+      const container = document.getElementById("bubbleContainer");
+      container.innerHTML = "";
 
-      document.querySelectorAll('.bubble').forEach(b => {
-        b.style.outline = "none";
-        b.style.cursor = "text";
+      bubbles.forEach(b => {
+        const div = document.createElement("div");
+        div.className = "bubble";
+        div.id = b.id;
+        div.contentEditable = true;
+
+        div.style.top = b.top + "px";
+        div.style.left = b.left + "px";
+        div.style.width = b.width + "px";
+        div.style.height = b.height + "px";
+
+        div.textContent = b.text;
+
+        container.appendChild(div);
+      });
+
+      attachBubbleLogic();
+    }
+
+    function attachBubbleLogic() {
+      interact('.bubble')
+        .draggable({
+          modifiers: [
+            interact.modifiers.restrictRect({
+              restriction: 'parent',
+              endOnly: true
+            })
+          ],
+          listeners: {
+            move(event) {
+              if (!editorMode) return;
+
+              const target = event.target;
+              const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+              const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+              target.style.transform = `translate(${x}px, ${y}px)`;
+              target.setAttribute('data-x', x);
+              target.setAttribute('data-y', y);
+            }
+          }
+        })
+        .resizable({
+          edges: { left: true, right: true, bottom: true, top: true }
+        })
+        .on('resizemove', function (event) {
+          if (!editorMode) return;
+
+          const target = event.target;
+          let x = parseFloat(target.getAttribute('data-x')) || 0;
+          let y = parseFloat(target.getAttribute('data-y')) || 0;
+
+          target.style.width = event.rect.width + 'px';
+          target.style.height = event.rect.height + 'px';
+
+          x += event.deltaRect.left;
+          y += event.deltaRect.top;
+
+          target.style.transform = `translate(${x}px, ${y}px)`;
+          target.setAttribute('data-x', x);
+          target.setAttribute('data-y', y);
+        });
+
+      document.querySelectorAll('.bubble').forEach(bubble => {
+        bubble.addEventListener('input', () => {
+          const maxHeight = bubble.clientHeight;
+          const scrollHeight = bubble.scrollHeight;
+
+          if (scrollHeight > maxHeight) {
+            bubble.textContent = bubble.textContent.slice(0, -1);
+
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(bubble);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
       });
     }
 
     document.getElementById("toggleMode").addEventListener("click", () => {
-      if (editorMode) enableUserMode();
-      else enableEditorMode();
-    });
-
-    interact('.bubble')
-      .draggable({
-        modifiers: [
-          interact.modifiers.restrictRect({
-            restriction: 'parent',
-            endOnly: true
-          })
-        ],
-        listeners: {
-          move(event) {
-            if (!editorMode) return;
-
-            const target = event.target;
-            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-            target.style.transform = `translate(${x}px, ${y}px)`;
-            target.setAttribute('data-x', x);
-            target.setAttribute('data-y', y);
-          }
-        }
-      })
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true }
-      })
-      .on('resizemove', function (event) {
-        if (!editorMode) return;
-
-        const target = event.target;
-        let x = parseFloat(target.getAttribute('data-x')) || 0;
-        let y = parseFloat(target.getAttribute('data-y')) || 0;
-
-        target.style.width = event.rect.width + 'px';
-        target.style.height = event.rect.height + 'px';
-
-        x += event.deltaRect.left;
-        y += event.deltaRect.top;
-
-        target.style.transform = `translate(${x}px, ${y}px)`;
-        target.setAttribute('data-x', x);
-        target.setAttribute('data-y', y);
-      });
-
-    document.querySelectorAll('.bubble').forEach(bubble => {
-      bubble.addEventListener('input', () => {
-        const maxHeight = bubble.clientHeight;
-        const scrollHeight = bubble.scrollHeight;
-
-        if (scrollHeight > maxHeight) {
-          bubble.textContent = bubble.textContent.slice(0, -1);
-
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.selectNodeContents(bubble);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-      });
+      editorMode = !editorMode;
+      document.getElementById("toggleMode").textContent =
+        editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
+      document.getElementById("saveLayout").style.display =
+        editorMode ? "inline-block" : "none";
     });
 
     document.getElementById("saveLayout").addEventListener("click", () => {
-      let output = "";
+      const container = document.getElementById("bubbleContainer");
+      const parentRect = container.getBoundingClientRect();
+
+      const newLayout = [];
 
       document.querySelectorAll('.bubble').forEach(b => {
         const rect = b.getBoundingClientRect();
-        const parentRect = b.parentElement.getBoundingClientRect();
 
-        const top = rect.top - parentRect.top;
-        const left = rect.left - parentRect.left;
-
-        output += `<div class="bubble" style="top:${top}px; left:${left}px; width:${b.offsetWidth}px; height:${b.offsetHeight}px;">${b.textContent}</div>\n\n`;
+        newLayout.push({
+          id: b.id,
+          top: rect.top - parentRect.top,
+          left: rect.left - parentRect.left,
+          width: b.offsetWidth,
+          height: b.offsetHeight,
+          text: b.textContent
+        });
       });
 
-      document.getElementById("layoutOutput").value = output;
+      const json = JSON.stringify(newLayout, null, 2);
+      document.getElementById("layoutOutput").value = json;
+
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "layout.json";
+      a.click();
+      URL.revokeObjectURL(url);
     });
+
+    loadLayout();
   </script>
 
 </body>
