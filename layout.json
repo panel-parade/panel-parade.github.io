@@ -1,42 +1,42 @@
 [
   {
     "id": "bubble1",
-    "top": 4,
-    "left": 101,
-    "width": 183,
-    "height": 158,
+    "top": 31,
+    "left": 65,
+    "width": 268,
+    "height": 150,
     "text": "Bubble 1"
   },
   {
     "id": "bubble2",
-    "top": 246,
-    "left": 64,
-    "width": 200,
-    "height": 132,
+    "top": 256,
+    "left": 47,
+    "width": 242,
+    "height": 106,
     "text": "Bubble 2"
   },
   {
     "id": "bubble3",
-    "top": 698,
-    "left": 73,
+    "top": 694,
+    "left": 58,
     "width": 183,
     "height": 134,
     "text": "Bubble 3"
   },
   {
     "id": "bubble4",
-    "top": 657,
-    "left": 427,
-    "width": 286,
-    "height": 98,
+    "top": 653,
+    "left": 395,
+    "width": 353,
+    "height": 100,
     "text": "Bubble 4"
   },
   {
     "id": "bubble5",
-    "top": 761,
-    "left": 666,
-    "width": 170,
-    "height": 92,
-    "text": "Bubble "
+    "top": 763,
+    "left": 665,
+    "width": 176,
+    "height": 81,
+    "text": "Bubble 5"
   }
 ]
