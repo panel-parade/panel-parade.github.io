@@ -42,7 +42,9 @@
       font-size: 18px;
       text-align: center;
       outline: 1px dashed red; /* debug */
-      overflow: hidden;
+      overflow: hidden;        /* no scrollbars, no visible overflow */
+      white-space: normal;     /* allow wrapping */
+      word-wrap: break-word;   /* break long words */
       min-width: 80px;
       min-height: 40px;
       cursor: move;
@@ -90,6 +92,7 @@
   </div>
 
   <script>
+    // Drag + resize with Interact.js
     interact('.bubble')
       .draggable({
         modifiers: [
@@ -128,6 +131,26 @@
         target.setAttribute('data-x', x);
         target.setAttribute('data-y', y);
       });
+
+    // Prevent text from overflowing the bubble
+    document.querySelectorAll('.bubble').forEach(bubble => {
+      bubble.addEventListener('input', () => {
+        const maxHeight = bubble.clientHeight;
+        const scrollHeight = bubble.scrollHeight;
+
+        if (scrollHeight > maxHeight) {
+          // Remove the last character typed
+          bubble.textContent = bubble.textContent.slice(0, -1);
+          // Move caret to end
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(bubble);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      });
+    });
   </script>
 </body>
 </html>
