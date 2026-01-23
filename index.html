@@ -3,31 +3,38 @@
   <head>
     <meta charset="UTF-8">
     <title>Panel Parade</title>
+
+    <style>
+      .panel {
+        position: relative;
+        display: inline-block;
+      }
+
+      .bubble {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.0); /* transparent so bubbles show */
+        padding: 6px;
+        font-family: sans-serif;
+        width: 180px;
+        min-height: 40px;
+        outline: none;
+      }
+    </style>
   </head>
+
   <body>
     <h1>Panel Parade is live</h1>
     <p>Your comic project begins here.</p>
-    <img src="images/Buster Brown empty bubbles test1.jpg" alt="Test image">
-    <div class="panel">  
-  <div class="bubble" id="bubble1" contenteditable="true"></div>
-  <div class="bubble" id="bubble2" contenteditable="true"></div>
-  <div class="bubble" id="bubble3" contenteditable="true"></div>
-  <div class="bubble" id="bubble4" contenteditable="true"></div>
-  <div class="bubble" id="bubble5" contenteditable="true"></div>
-</div>
-    .panel {
-  position: relative;
-  display: inline-block;
-}
 
-.bubble {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.7);
-  padding: 6px;
-  border-radius: 8px;
-  font-family: sans-serif;
-  width: 180px; /* adjust per bubble */
-  min-height: 40px;
-}
+    <div class="panel">
+      <img src="images/Buster Brown empty bubbles test1.jpg" alt="Test image">
+
+      <div class="bubble" id="bubble1" contenteditable="true"></div>
+      <div class="bubble" id="bubble2" contenteditable="true"></div>
+      <div class="bubble" id="bubble3" contenteditable="true"></div>
+      <div class="bubble" id="bubble4" contenteditable="true"></div>
+      <div class="bubble" id="bubble5" contenteditable="true"></div>
+    </div>
+
   </body>
 </html>
