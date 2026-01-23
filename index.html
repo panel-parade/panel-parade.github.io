@@ -109,12 +109,9 @@
       document.getElementById("toggleMode").textContent = "Switch to User Mode";
       document.getElementById("saveLayout").style.display = "inline-block";
 
-      interact('.bubble').draggable(true);
-      interact('.bubble').resizable(true);
-
       document.querySelectorAll('.bubble').forEach(b => {
-        b.style.pointerEvents = "auto";
-        b.setAttribute("contenteditable", "true");
+        b.style.outline = "1px dashed red";
+        b.style.cursor = "move";
       });
     }
 
@@ -123,10 +120,94 @@
       document.getElementById("toggleMode").textContent = "Switch to Editor Mode";
       document.getElementById("saveLayout").style.display = "none";
 
-      interact('.bubble').draggable(false);
-      interact('.bubble').resizable(false);
+      document.querySelectorAll('.bubble').forEach(b => {
+        b.style.outline = "none";
+        b.style.cursor = "text";
+      });
+    }
+
+    document.getElementById("toggleMode").addEventListener("click", () => {
+      if (editorMode) enableUserMode();
+      else enableEditorMode();
+    });
+
+    interact('.bubble')
+      .draggable({
+        modifiers: [
+          interact.modifiers.restrictRect({
+            restriction: 'parent',
+            endOnly: true
+          })
+        ],
+        listeners: {
+          move(event) {
+            if (!editorMode) return;
+
+            const target = event.target;
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+            target.style.transform = `translate(${x}px, ${y}px)`;
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
+          }
+        }
+      })
+      .resizable({
+        edges: { left: true, right: true, bottom: true, top: true }
+      })
+      .on('resizemove', function (event) {
+        if (!editorMode) return;
+
+        const target = event.target;
+        let x = parseFloat(target.getAttribute('data-x')) || 0;
+        let y = parseFloat(target.getAttribute('data-y')) || 0;
+
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
+
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      });
+
+    document.querySelectorAll('.bubble').forEach(bubble => {
+      bubble.addEventListener('input', () => {
+        const maxHeight = bubble.clientHeight;
+        const scrollHeight = bubble.scrollHeight;
+
+        if (scrollHeight > maxHeight) {
+          bubble.textContent = bubble.textContent.slice(0, -1);
+
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(bubble);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      });
+    });
+
+    document.getElementById("saveLayout").addEventListener("click", () => {
+      let output = "";
 
       document.querySelectorAll('.bubble').forEach(b => {
-        b.style.pointerEvents = "auto";
-        b.setAttribute("contenteditable", "true");
+        const rect = b.getBoundingClientRect();
+        const parentRect = b.parentElement.getBoundingClientRect();
+
+        const top = rect.top - parentRect.top;
+        const left = rect.left - parentRect.left;
+
+        output += `<div class="bubble" style="top:${top}px; left:${left}px; width:${b.offsetWidth}px; height:${b.offsetHeight}px;">${b.textContent}</div>\n\n`;
       });
+
+      document.getElementById("layoutOutput").value = output;
+    });
+  </script>
+
+</body>
+</html>
