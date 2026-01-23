@@ -69,7 +69,26 @@
       }
     </style>
   </head>
+<div id="coords" style="
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  background:#000;
+  color:#fff;
+  padding:6px;
+  font-family:monospace;
+  z-index:9999;">
+</div>
 
+<script>
+const img = document.querySelector('.panel img');
+document.addEventListener('mousemove', function(e) {
+  const rect = img.getBoundingClientRect();
+  const x = Math.round(e.clientX - rect.left);
+  const y = Math.round(e.clientY - rect.top);
+  document.getElementById('coords').textContent = 'x: ' + x + ', y: ' + y;
+});
+</script>
   <body>
     <h1>Panel Parade is live</h1>
     <p>Your comic project begins here.</p>
