@@ -1,132 +1,133 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Panel Parade – Buster Brown test</title>
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Parade – Buster Brown Test</title>
 
-    <!-- Interact.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+  <!-- Interact.js -->
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        background: #f5f5f5;
-        padding: 20px;
-      }
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
 
-      h1 {
-        margin-bottom: 0.25rem;
-      }
+    h1 {
+      margin-bottom: 0.25rem;
+    }
 
-      p {
-        margin-top: 0;
-        margin-bottom: 1rem;
-      }
+    .panel {
+      position: relative;
+      display: inline-block;
+      background: #ddd;
+      padding: 10px;
+    }
 
-      .panel {
-        position: relative;
-        display: inline-block;
-        background: #ddd;
-        padding: 10px;
-      }
+    .panel img {
+      display: block;
+      width: 1024px;
+      height: auto;
+      position: relative;
+      z-index: 1;
+    }
 
-      .panel img {
-        display: block;
-        width: 1024px; /* adjust if your image is different */
-        height: auto;
-      }
+    .bubble {
+      position: absolute;
+      z-index: 10; /* always above the image */
+      background: rgba(255, 255, 255, 0);
+      color: black;
+      padding: 4px;
+      font-size: 18px;
+      text-align: center;
+      outline: 1px dashed red; /* debug */
+      overflow: hidden;
+      min-width: 80px;
+      min-height: 40px;
+      cursor: move;
+    }
 
-      .bubble {
-        position: absolute;
-        background: rgba(255, 255, 255, 0); /* transparent over art */
-        color: black;
-        padding: 4px;
-        font-size: 18px;
-        text-align: center;
-        outline: 1px dashed red; /* debug: see the box */
-        overflow: hidden;
-        min-width: 80px;
-        min-height: 40px;
-        cursor: move;
-      }
+    .bubble[contenteditable="true"]:focus {
+      outline: 2px solid #0078d4;
+      background: rgba(255, 255, 255, 0.6);
+    }
+  </style>
+</head>
 
-      .bubble[contenteditable="true"]:focus {
-        outline: 2px solid #0078d4;
-        background: rgba(255, 255, 255, 0.6);
-      }
-    </style>
-  </head>
+<body>
+  <h1>Panel Parade – Buster Brown Test</h1>
+  <p>Drag and resize the red boxes to fit the empty bubbles, then type your text.</p>
 
-  <body>
-    <h1>Panel Parade – Buster Brown test</h1>
-    <p>Drag and resize the red boxes to fit the empty bubbles, then type your text.</p>
+  <div class="panel">
+    <img src="images/Buster Brown empty bubbles test1.jpg" alt="Buster Brown test">
 
-    <div class="panel">
-      <img src="images/Buster Brown empty bubbles test1.jpg" alt="Buster Brown test">
-
-      <!-- Rough starting positions; you can drag/resize these freely -->
-      <div class="bubble" id="bubble1" contenteditable="true"
-           style="top: 120px; left: 120px; width: 260px; height: 110px;">
-        Bubble 1
-      </div>
-
-      <div class="bubble" id="bubble2" contenteditable="true"
-           style="top: 360px; left: 120px; width: 240px; height: 100px;">
-        Bubble 2
-      </div>
-
-      <div class="bubble" id="bubble3" contenteditable="true"
-           style="top: 650px; left: 120px; width: 240px; height: 110px;">
-        Bubble 3
-      </div>
-
-      <div class="bubble" id="bubble4" contenteditable="true"
-           style="top: 620px; left: 520px; width: 280px; height: 130px;">
-        Bubble 4
-      </div>
-
-      <div class="bubble" id="bubble5" contenteditable="true"
-           style="top: 780px; left: 620px; width: 200px; height: 80px;">
-        Bubble 5
-      </div>
+    <!-- Starting positions (rough) -->
+    <div class="bubble" id="bubble1" contenteditable="true"
+         style="top: 140px; left: 140px; width: 260px; height: 110px;">
+      Bubble 1
     </div>
 
-    <script>
-      // Make all .bubble elements draggable and resizable
-      interact('.bubble')
-        .draggable({
-          listeners: {
-            move(event) {
-              const target = event.target;
-              const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-              const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+    <div class="bubble" id="bubble2" contenteditable="true"
+         style="top: 360px; left: 140px; width: 240px; height: 100px;">
+      Bubble 2
+    </div>
 
-              target.style.transform = `translate(${x}px, ${y}px)`;
-              target.setAttribute('data-x', x);
-              target.setAttribute('data-y', y);
-            }
+    <div class="bubble" id="bubble3" contenteditable="true"
+         style="top: 650px; left: 140px; width: 240px; height: 110px;">
+      Bubble 3
+    </div>
+
+    <div class="bubble" id="bubble4" contenteditable="true"
+         style="top: 620px; left: 520px; width: 280px; height: 130px;">
+      Bubble 4
+    </div>
+
+    <div class="bubble" id="bubble5" contenteditable="true"
+         style="top: 780px; left: 620px; width: 200px; height: 80px;">
+      Bubble 5
+    </div>
+  </div>
+
+  <script>
+    interact('.bubble')
+      .draggable({
+        modifiers: [
+          interact.modifiers.restrictRect({
+            restriction: 'parent',
+            endOnly: true
+          })
+        ],
+        listeners: {
+          move(event) {
+            const target = event.target;
+            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+            target.style.transform = `translate(${x}px, ${y}px)`;
+            target.setAttribute('data-x', x);
+            target.setAttribute('data-y', y);
           }
-        })
-        .resizable({
-          edges: { left: true, right: true, bottom: true, top: true }
-        })
-        .on('resizemove', function (event) {
-          const target = event.target;
-          let x = parseFloat(target.getAttribute('data-x')) || 0;
-          let y = parseFloat(target.getAttribute('data-y')) || 0;
+        }
+      })
+      .resizable({
+        edges: { left: true, right: true, bottom: true, top: true }
+      })
+      .on('resizemove', function (event) {
+        const target = event.target;
+        let x = parseFloat(target.getAttribute('data-x')) || 0;
+        let y = parseFloat(target.getAttribute('data-y')) || 0;
 
-          // Update size
-          target.style.width = event.rect.width + 'px';
-          target.style.height = event.rect.height + 'px';
+        target.style.width = event.rect.width + 'px';
+        target.style.height = event.rect.height + 'px';
 
-          // Translate when resizing from top/left
-          x += event.deltaRect.left;
-          y += event.deltaRect.top;
+        x += event.deltaRect.left;
+        y += event.deltaRect.top;
 
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.setAttribute('data-x', x);
-          target.setAttribute('data-y', y);
-        });
-    </script>
-  </body>
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      });
+  </script>
+</body>
 </html>
