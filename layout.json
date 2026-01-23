@@ -3,16 +3,16 @@
     "id": "bubble1",
     "top": 31,
     "left": 65,
-    "width": 268,
-    "height": 150,
+    "width": 255,
+    "height": 103,
     "text": "Bubble 1"
   },
   {
     "id": "bubble2",
     "top": 256,
     "left": 47,
-    "width": 242,
-    "height": 106,
+    "width": 231,
+    "height": 111,
     "text": "Bubble 2"
   },
   {
@@ -27,16 +27,16 @@
     "id": "bubble4",
     "top": 653,
     "left": 395,
-    "width": 353,
-    "height": 100,
+    "width": 323,
+    "height": 95,
     "text": "Bubble 4"
   },
   {
     "id": "bubble5",
-    "top": 763,
-    "left": 665,
-    "width": 176,
-    "height": 81,
+    "top": 762,
+    "left": 660,
+    "width": 173,
+    "height": 84,
     "text": "Bubble 5"
   }
 ]
