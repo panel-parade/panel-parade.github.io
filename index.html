@@ -25,12 +25,22 @@
       width: 1024px;
       height: auto;
       position: relative;
-      z-index: 1;
+      z-index: 1; /* image below bubbles */
+    }
+
+    #bubbleContainer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10; /* container above image */
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* let bubbles handle events */
     }
 
     .bubble {
       position: absolute;
-      z-index: 10;
+      z-index: 20; /* bubbles above everything */
       background: rgba(255, 255, 255, 0);
       color: black;
       padding: 4px;
@@ -43,6 +53,16 @@
       min-width: 80px;
       min-height: 40px;
       cursor: move;
+      pointer-events: auto; /* re-enable events on bubbles */
+    }
+
+    .bubble[contenteditable="true"]:focus {
+      outline: 2px solid #0078d4;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    #controls {
+      margin-bottom: 15px;
     }
 
     #layoutOutput {
@@ -62,7 +82,7 @@
   </div>
 
   <div class="panel">
-    <img src="images/Buster Brown empty bubbles test1.jpg">
+    <img src="images/Buster Brown empty bubbles test1.jpg" alt="Buster Brown">
     <div id="bubbleContainer"></div>
   </div>
 
@@ -170,6 +190,11 @@
         editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
       document.getElementById("saveLayout").style.display =
         editorMode ? "inline-block" : "none";
+
+      document.querySelectorAll('.bubble').forEach(b => {
+        b.style.outline = editorMode ? "1px dashed red" : "none";
+        b.style.cursor = editorMode ? "move" : "text";
+      });
     });
 
     document.getElementById("saveLayout").addEventListener("click", () => {
