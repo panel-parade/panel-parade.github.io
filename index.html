@@ -7,16 +7,6 @@
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <!-- Supabase client -->
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-    window.supabase = createClient(
-      "https://wsqtinlciifzdlwmprso.supabase.co",
-      "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
-    );
-  </script>
-
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -425,6 +415,15 @@
 
     loadLayout();
   </script>
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+  const supabase = createClient(
+    "https://wsqtinlciifzdlwmprso.supabase.co",
+    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+  );
+
+  window.supabase = supabase;
+</script>
 </body>
 </html>
