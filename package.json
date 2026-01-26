@@ -1,7 +1,0 @@
-{
-  "name": "panel-parade",
-  "version": "1.0.0",
-  "dependencies": {
-    "@netlify/blobs": "^6.0.0"
-  }
-}
