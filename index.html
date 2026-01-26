@@ -381,14 +381,18 @@
         return;
       }
 
-      const submitted = bubbles.map(b => ({
-        id: b.id,
-        text: b.text
-      }));
+  const layout = bubbles.map(b => ({
+    id: b.id,
+    top: b.top,
+    left: b.left,
+    width: b.width,
+    height: b.height,
+    text: b.text
+  }));
 
-      const combinedText = submitted
-        .map(b => `${b.id}: ${b.text}`)
-        .join("\n");
+  const combinedText = layout
+    .map(b => `${b.id}: ${b.text}`)
+    .join("\n");
 
       const { data, error } = await window.supabase
         .from("submissions")
