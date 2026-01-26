@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Submit Entry</title>
+</head>
+<body>
+
+  <h2>Submit something</h2>
+
+  <form id="submission-form">
+    <textarea id="content" placeholder="Type your message..." required></textarea>
+    <br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <p id="status"></p>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const supabase = createClient(
+      "https://wsqtinlciifzdlwmprso.supabase.co",
+      "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+    );
+
+    const form = document.getElementById("submission-form");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const content = document.getElementById("content").value.trim();
+      if (!content) return;
+
+      status.textContent = "Submitting...";
+
+      const { data, error } = await supabase
+        .from("submissions")
+        .insert({ content });
+
+      if (error) {
+        status.textContent = "Error: " + error.message;
+      } else {
+        status.textContent = "Submitted successfully!";
+        form.reset();
+      }
+    });
+  </script>
+
+</body>
+</html>
