@@ -1,7 +1,7 @@
 exports.handler = async () => {
   try {
-    const { blobs } = require("@netlify/blobs");
-    const store = blobs({ name: "submissions" });
+    const { getStore } = require("@netlify/blobs");
+    const store = getStore("submissions");
 
     // Get all stored submission keys
     const keys = await store.list();
@@ -11,7 +11,6 @@ exports.handler = async () => {
     for (const key of keys.blobs) {
       const data = await store.getJSON(key);
 
-      // Attach the ID so the dashboard can reference it
       submissions.push({
         id: key,
         ...data
