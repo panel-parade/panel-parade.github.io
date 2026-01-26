@@ -34,14 +34,14 @@
       width: 1024px;
       height: auto;
       position: relative;
-      z-index: 1; /* image below bubbles */
+      z-index: 1;
     }
 
     #bubbleContainer {
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 10; /* container above image */
+      z-index: 10;
       width: 100%;
       height: 100%;
       pointer-events: none;
@@ -96,7 +96,7 @@
       text-align: center;
       cursor: pointer;
       z-index: 30;
-      display: none; /* only in editor mode */
+      display: none;
     }
 
     .bubble.editor-mode .delete-handle {
@@ -114,9 +114,19 @@
     <button id="exportPng">Export as PNG</button>
   </div>
 
+  <!-- NEW: Instruction text -->
+  <p id="instructions" style="margin-bottom: 15px; font-size: 18px;">
+    Enter your text in the speech bubbles and then press Submit.
+  </p>
+
   <div class="panel" id="comicPanel">
     <img src="images/Buster Brown empty bubbles test1.jpg" alt="Comic">
     <div id="bubbleContainer"></div>
+  </div>
+
+  <!-- NEW: Submit button -->
+  <div style="margin-top: 20px;">
+    <button id="submitBubbles" style="padding: 10px 20px; font-size: 18px;">Submit</button>
   </div>
 
   <script>
@@ -241,6 +251,9 @@
             sel.removeAllRanges();
             sel.addRange(range);
           }
+
+          const b = bubbles.find(x => x.id === bubble.id);
+          if (b) b.text = textDiv.innerText;
         });
       });
     }
@@ -346,6 +359,51 @@
           });
         }
       });
+    });
+
+    // NEW: Submit button logic
+    document.getElementById("submitBubbles").addEventListener("click", async () => {
+      const submitBtn = document.getElementById("submitBubbles");
+
+      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+
+      if (!allFilled) {
+        submitBtn.textContent = "Complete the text first";
+        submitBtn.style.backgroundColor = "#e81123";
+        submitBtn.style.color = "white";
+
+        setTimeout(() => {
+          submitBtn.textContent = "Submit";
+          submitBtn.style.backgroundColor = "";
+          submitBtn.style.color = "";
+        }, 2000);
+
+        return;
+      }
+
+      const submitted = bubbles.map(b => ({
+        id: b.id,
+        text: b.text
+      }));
+
+      const res = await fetch("/.netlify/functions/list-approved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bubbles: submitted })
+      });
+
+      const data = await res.json();
+      console.log("Moderation response:", data);
+
+      submitBtn.textContent = "Submission received";
+      submitBtn.style.backgroundColor = "#107c10";
+      submitBtn.style.color = "white";
+
+      setTimeout(() => {
+        submitBtn.textContent = "Submit";
+        submitBtn.style.backgroundColor = "";
+        submitBtn.style.color = "";
+      }, 2000);
     });
 
     loadLayout();
