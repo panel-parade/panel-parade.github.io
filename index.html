@@ -413,22 +413,6 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
   }
 });
  
-    const combinedText = layout
-    .map(b => `${b.id}: ${b.text}`)
-    .join("\n");
-
-      const { data, error } = await window.supabase
-        .from("submissions")
-        .insert({ content: combinedText });
-
-      if (error) {
-        console.error("Supabase error:", error);
-        submitBtn.textContent = "Error submitting";
-        submitBtn.style.backgroundColor = "#e81123";
-        submitBtn.style.color = "white";
-        return;
-      }
-
       submitBtn.textContent = "Submission received";
       submitBtn.style.backgroundColor = "#107c10";
       submitBtn.style.color = "white";
