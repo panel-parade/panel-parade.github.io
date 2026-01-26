@@ -7,6 +7,16 @@
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+  <!-- Supabase client -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    window.supabase = createClient(
+      "https://wsqtinlciifzdlwmprso.supabase.co",
+      "YOUR_PUBLISHABLE_API_KEY"
+    );
+  </script>
+
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -114,7 +124,6 @@
     <button id="exportPng">Export as PNG</button>
   </div>
 
-  <!-- NEW: Instruction text -->
   <p id="instructions" style="margin-bottom: 15px; font-size: 18px;">
     Enter your text in the speech bubbles and then press Submit.
   </p>
@@ -124,7 +133,6 @@
     <div id="bubbleContainer"></div>
   </div>
 
-  <!-- NEW: Submit button -->
   <div style="margin-top: 20px;">
     <button id="submitBubbles" style="padding: 10px 20px; font-size: 18px;">Submit</button>
   </div>
@@ -323,91 +331,4 @@
         });
       });
 
-      const json = JSON.stringify(newLayout, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "layout.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("exportPng").addEventListener("click", () => {
-      const panel = document.getElementById("comicPanel");
-
-      const wasEditor = editorMode;
-      if (editorMode) {
-        editorMode = false;
-        document.querySelectorAll('.bubble').forEach(b => {
-          b.classList.remove("editor-mode");
-          b.style.cursor = "text";
-        });
-      }
-
-      html2canvas(panel, { useCORS: true }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "comic.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        if (wasEditor) {
-          editorMode = true;
-          document.querySelectorAll('.bubble').forEach(b => {
-            b.classList.add("editor-mode");
-            b.style.cursor = "move";
-          });
-        }
-      });
-    });
-
-    // NEW: Submit button logic
-    document.getElementById("submitBubbles").addEventListener("click", async () => {
-      const submitBtn = document.getElementById("submitBubbles");
-
-      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
-
-      if (!allFilled) {
-        submitBtn.textContent = "Complete the text first";
-        submitBtn.style.backgroundColor = "#e81123";
-        submitBtn.style.color = "white";
-
-        setTimeout(() => {
-          submitBtn.textContent = "Submit";
-          submitBtn.style.backgroundColor = "";
-          submitBtn.style.color = "";
-        }, 2000);
-
-        return;
-      }
-
-      const submitted = bubbles.map(b => ({
-        id: b.id,
-        text: b.text
-      }));
-
-      const res = await fetch("/.netlify/functions/list-approved", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bubbles: submitted })
-      });
-
-      const data = await res.json();
-      console.log("Moderation response:", data);
-
-      submitBtn.textContent = "Submission received";
-      submitBtn.style.backgroundColor = "#107c10";
-      submitBtn.style.color = "white";
-
-      setTimeout(() => {
-        submitBtn.textContent = "Submit";
-        submitBtn.style.backgroundColor = "";
-        submitBtn.style.color = "";
-      }, 2000);
-    });
-
-    loadLayout();
-  </script>
-
-</body>
-</html>
+     
