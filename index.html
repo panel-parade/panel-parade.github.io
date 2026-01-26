@@ -359,27 +359,25 @@
       });
     });
 
-    /* ---------------------------
-       NEW: Supabase Submission
-    ----------------------------*/
-    document.getElementById("submitBubbles").addEventListener("click", async () => {
-      const submitBtn = document.getElementById("submitBubbles");
+/* NEW: Supabase Submission ----------------------------*/
+document.getElementById("submitBubbles").addEventListener("click", async () => {
+  const submitBtn = document.getElementById("submitBubbles");
 
-      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+  const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
 
-      if (!allFilled) {
-        submitBtn.textContent = "Complete the text first";
-        submitBtn.style.backgroundColor = "#e81123";
-        submitBtn.style.color = "white";
+  if (!allFilled) {
+    submitBtn.textContent = "Complete the text first";
+    submitBtn.style.backgroundColor = "#e81123";
+    submitBtn.style.color = "white";
 
-        setTimeout(() => {
-          submitBtn.textContent = "Submit";
-          submitBtn.style.backgroundColor = "";
-          submitBtn.style.color = "";
-        }, 2000);
+    setTimeout(() => {
+      submitBtn.textContent = "Submit";
+      submitBtn.style.backgroundColor = "";
+      submitBtn.style.color = "";
+    }, 2000);
 
-        return;
-      }
+    return;
+  }
 
   const layout = bubbles.map(b => ({
     id: b.id,
@@ -391,6 +389,31 @@
   }));
 
   const combinedText = layout
+    .map(b => `${b.id}: ${b.text}`)
+    .join("\n");
+
+  const { data, error } = await window.supabase
+    .from("submissions")
+    .insert({
+      content: combinedText,
+      layout_json: layout
+    });
+
+  // Optional: success feedback
+  if (!error) {
+    submitBtn.textContent = "Submitted!";
+    submitBtn.style.backgroundColor = "#107c10";
+    submitBtn.style.color = "white";
+
+    setTimeout(() => {
+      submitBtn.textContent = "Submit";
+      submitBtn.style.backgroundColor = "";
+      submitBtn.style.color = "";
+    }, 2000);
+  }
+});
+ 
+    const combinedText = layout
     .map(b => `${b.id}: ${b.text}`)
     .join("\n");
 
