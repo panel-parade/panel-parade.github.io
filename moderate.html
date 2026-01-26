@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Moderation Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    #submissions {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .submission {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .submission img {
+      width: 100%;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .submission p {
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    button {
+      padding: 8px 12px;
+      margin-right: 8px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .approve {
+      background: #107c10;
+      color: white;
+    }
+
+    .reject {
+      background: #d83b01;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Moderation Dashboard</h1>
+  <div id="submissions">Loading submissions…</div>
+
+  <script>
+    async function loadSubmissions() {
+      const container = document.getElementById("submissions");
+
+      try {
+        const res = await fetch("/.netlify/functions/list-submissions");
+        const submissions = await res.json();
+
+        container.innerHTML = "";
+
+        submissions.forEach(sub => {
+          const div = document.createElement("div");
+          div.className = "submission";
+
+          div.innerHTML = `
+            <img src="${sub.image}" alt="Submitted comic">
+            <p><strong>Name:</strong> ${sub.name || "Anonymous"}</p>
+            <p><strong>ID:</strong> ${sub.id}</p>
+            <button class="approve" onclick="moderate('${sub.id}', 'approved')">Approve</button>
+            <button class="reject" onclick="moderate('${sub.id}', 'rejected')">Reject</button>
+          `;
+
+          container.appendChild(div);
+        });
+
+      } catch (err) {
+        container.innerHTML = "Error loading submissions.";
+        console.error(err);
+      }
+    }
+
+    async function moderate(id, status) {
+      await fetch("/.netlify/functions/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status })
+      });
+
+      loadSubmissions();
+    }
+
+    loadSubmissions();
+  </script>
+
+</body>
+</html>
