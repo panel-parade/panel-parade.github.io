@@ -331,4 +331,100 @@
         });
       });
 
-     
+      const json = JSON.stringify(newLayout, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "layout.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("exportPng").addEventListener("click", () => {
+      const panel = document.getElementById("comicPanel");
+
+      const wasEditor = editorMode;
+      if (editorMode) {
+        editorMode = false;
+        document.querySelectorAll('.bubble').forEach(b => {
+          b.classList.remove("editor-mode");
+          b.style.cursor = "text";
+        });
+      }
+
+      html2canvas(panel, { useCORS: true }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comic.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+
+        if (wasEditor) {
+          editorMode = true;
+          document.querySelectorAll('.bubble').forEach(b => {
+            b.classList.add("editor-mode");
+            b.style.cursor = "move";
+          });
+        }
+      });
+    });
+
+    /* ---------------------------
+       NEW: Supabase Submission
+    ----------------------------*/
+    document.getElementById("submitBubbles").addEventListener("click", async () => {
+      const submitBtn = document.getElementById("submitBubbles");
+
+      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+
+      if (!allFilled) {
+        submitBtn.textContent = "Complete the text first";
+        submitBtn.style.backgroundColor = "#e81123";
+        submitBtn.style.color = "white";
+
+        setTimeout(() => {
+          submitBtn.textContent = "Submit";
+          submitBtn.style.backgroundColor = "";
+          submitBtn.style.color = "";
+        }, 2000);
+
+        return;
+      }
+
+      const submitted = bubbles.map(b => ({
+        id: b.id,
+        text: b.text
+      }));
+
+      const combinedText = submitted
+        .map(b => `${b.id}: ${b.text}`)
+        .join("\n");
+
+      const { data, error } = await window.supabase
+        .from("submissions")
+        .insert({ content: combinedText });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        submitBtn.textContent = "Error submitting";
+        submitBtn.style.backgroundColor = "#e81123";
+        submitBtn.style.color = "white";
+        return;
+      }
+
+      submitBtn.textContent = "Submission received";
+      submitBtn.style.backgroundColor = "#107c10";
+      submitBtn.style.color = "white";
+
+      setTimeout(() => {
+        submitBtn.textContent = "Submit";
+        submitBtn.style.backgroundColor = "";
+        submitBtn.style.color = "";
+      }, 2000);
+    });
+
+    loadLayout();
+  </script>
+
+</body>
+</html>
