@@ -427,14 +427,15 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
     loadLayout();
   </script>
 
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  const supabase = createClient(
-    "https://wsqtinlciifzdlwmprso.supabase.co",
-    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
-  );
+    const supabase = createClient(
+      "https://wsqtinlciifzdlwmprso.supabase.co",
+      "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+    );
 
-  window.supabase = supabase;
-</script>
+    window.supabase = supabase;
+  </script>
 </body>
 </html>
