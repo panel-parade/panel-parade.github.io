@@ -360,7 +360,7 @@
     });
 
 /* NEW: Supabase Submission ----------------------------*/
-    <script type="module">
+   <script type="module">
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
   // Initialize Supabase
@@ -371,7 +371,6 @@
 
   window.supabase = supabase;
 
-  // If you have loadLayout(), keep it — otherwise remove this line
   if (typeof loadLayout === "function") {
     loadLayout();
   }
