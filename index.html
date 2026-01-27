@@ -360,60 +360,64 @@
     });
 
 /* NEW: Supabase Submission ----------------------------*/
-document.getElementById("submitBubbles").addEventListener("click", async () => {
-  const submitBtn = document.getElementById("submitBubbles");
+    <script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+  // Initialize Supabase
+  const supabase = createClient(
+    "https://wsqtinlciifzdlwmprso.supabase.co",
+    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+  );
 
-  if (!allFilled) {
-    submitBtn.textContent = "Complete the text first";
-    submitBtn.style.backgroundColor = "#e81123";
-    submitBtn.style.color = "white";
+  window.supabase = supabase;
 
-    setTimeout(() => {
-      submitBtn.textContent = "Submit";
-      submitBtn.style.backgroundColor = "";
-      submitBtn.style.color = "";
-    }, 2000);
-
-    return;
+  // If you have loadLayout(), keep it — otherwise remove this line
+  if (typeof loadLayout === "function") {
+    loadLayout();
   }
 
-  const layout = bubbles.map(b => ({
-    id: b.id,
-    top: b.top,
-    left: b.left,
-    width: b.width,
-    height: b.height,
-    text: b.text
-  }));
+  /* NEW: Supabase Submission ----------------------------*/
+  document.getElementById("submitBubbles").addEventListener("click", async () => {
+    const submitBtn = document.getElementById("submitBubbles");
 
-  const combinedText = layout
-    .map(b => `${b.id}: ${b.text}`)
-    .join("\n");
+    const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
 
-  const { data, error } = await window.supabase
-    .from("submissions")
-    .insert({
-      content: combinedText,
-      layout_json: layout
-    });
+    if (!allFilled) {
+      submitBtn.textContent = "Complete the text first";
+      submitBtn.style.backgroundColor = "#e81123";
+      submitBtn.style.color = "white";
 
-  // Optional: success feedback
-  if (!error) {
-    submitBtn.textContent = "Submitted!";
-    submitBtn.style.backgroundColor = "#107c10";
-    submitBtn.style.color = "white";
+      setTimeout(() => {
+        submitBtn.textContent = "Submit";
+        submitBtn.style.backgroundColor = "";
+        submitBtn.style.color = "";
+      }, 2000);
 
-    setTimeout(() => {
-      submitBtn.textContent = "Submit";
-      submitBtn.style.backgroundColor = "";
-      submitBtn.style.color = "";
-    }, 2000);
-  }
-});
- 
-      submitBtn.textContent = "Submission received";
+      return;
+    }
+
+    const layout = bubbles.map(b => ({
+      id: b.id,
+      top: b.top,
+      left: b.left,
+      width: b.width,
+      height: b.height,
+      text: b.text
+    }));
+
+    const combinedText = layout
+      .map(b => `${b.id}: ${b.text}`)
+      .join("\n");
+
+    const { data, error } = await window.supabase
+      .from("submissions")
+      .insert({
+        content: combinedText,
+        layout_json: layout
+      });
+
+    if (!error) {
+      submitBtn.textContent = "Submitted!";
       submitBtn.style.backgroundColor = "#107c10";
       submitBtn.style.color = "white";
 
@@ -422,20 +426,6 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
         submitBtn.style.backgroundColor = "";
         submitBtn.style.color = "";
       }, 2000);
-    });
-
-    loadLayout();
-  </script>
-
-  <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-    const supabase = createClient(
-      "https://wsqtinlciifzdlwmprso.supabase.co",
-      "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
-    );
-
-    window.supabase = supabase;
-  </script>
-</body>
-</html>
+    }
+  });
+</script>
