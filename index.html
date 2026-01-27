@@ -375,7 +375,7 @@
     });
 
     /* ----------------------------------------------------
-       Export PNG
+       Export PNG (local download only)
     ---------------------------------------------------- */
     document.getElementById("exportPng").addEventListener("click", () => {
       const panel = document.getElementById("comicPanel");
@@ -406,7 +406,33 @@
     });
 
     /* ----------------------------------------------------
-       Submit to Supabase
+       Upload PNG to Supabase Storage
+    ---------------------------------------------------- */
+    async function uploadPngToSupabase(canvas) {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      const filename = `comic_${Date.now()}.png`;
+
+      const { data, error } = await supabase.storage
+        .from("comics")
+        .upload(filename, blob, {
+          contentType: "image/png",
+          upsert: false
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        return null;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("comics")
+        .getPublicUrl(filename);
+
+      return publicUrlData.publicUrl;
+    }
+
+    /* ----------------------------------------------------
+       Submit to Supabase (text + layout + PNG upload)
     ---------------------------------------------------- */
     document.getElementById("submitBubbles").addEventListener("click", async () => {
       const submitBtn = document.getElementById("submitBubbles");
@@ -440,11 +466,17 @@
         .map(b => `${b.id}: ${b.text}`)
         .join("\n");
 
-      const { data, error } = await window.supabase
+      const panel = document.getElementById("comicPanel");
+      const canvas = await html2canvas(panel, { useCORS: true });
+
+      const imageUrl = await uploadPngToSupabase(canvas);
+
+      const { data, error } = await supabase
         .from("submissions")
         .insert({
           content: combinedText,
-          layout_json: layout
+          layout_json: layout,
+          image_url: imageUrl
         });
 
       if (!error) {
