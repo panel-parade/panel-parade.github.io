@@ -405,32 +405,45 @@
       });
     });
 
-    /* ----------------------------------------------------
-       Upload PNG to Supabase Storage
-    ---------------------------------------------------- */
-    async function uploadPngToSupabase(canvas) {
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-      const filename = `comic_${Date.now()}.png`;
+  /* ----------------------------------------------------
+   Upload PNG to Supabase Storage (with diagnostics)
+---------------------------------------------------- */
+async function uploadPngToSupabase(canvas) {
+  console.log("Starting PNG upload...");
 
-      const { data, error } = await supabase.storage
-        .from("comics")
-        .upload(filename, blob, {
-          contentType: "image/png",
-          upsert: false
-        });
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  console.log("Blob generated:", blob);
 
-      if (error) {
-        console.error("Upload error:", error);
-        return null;
-      }
+  if (!blob) {
+    console.error("❌ Blob is null — html2canvas failed.");
+    return null;
+  }
 
-      const { data: publicUrlData } = supabase.storage
-        .from("comics")
-        .getPublicUrl(filename);
+  const filename = `comic_${Date.now()}.png`;
+  console.log("Uploading as:", filename);
 
-      return publicUrlData.publicUrl;
-    }
+  const { data, error } = await supabase.storage
+    .from("comics")
+    .upload(filename, blob, {
+      contentType: "image/png",
+      upsert: false
+    });
 
+  console.log("Upload result:", data, error);
+
+  if (error) {
+    console.error("❌ Upload error:", error);
+    return null;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("comics")
+    .getPublicUrl(filename);
+
+  console.log("Public URL:", publicUrlData);
+
+  return publicUrlData.publicUrl;
+}
     /* ----------------------------------------------------
        Submit to Supabase (text + layout + PNG upload)
     ---------------------------------------------------- */
