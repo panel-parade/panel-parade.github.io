@@ -210,157 +210,7 @@
             }
           }
         })
-        .resizable({
-          edges: { left: true, right: true, bottom: true, top: true }
-        })
-        .on('resizemove', function (event) {
-          if (!editorMode) return;
-
-          const target = event.target;
-          let x = parseFloat(target.getAttribute('data-x')) || 0;
-          let y = parseFloat(target.getAttribute('data-y')) || 0;
-
-          target.style.width = event.rect.width + 'px';
-          target.style.height = event.rect.height + 'px';
-
-          x += event.deltaRect.left;
-          y += event.deltaRect.top;
-
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.setAttribute('data-x', x);
-          target.setAttribute('data-y', y);
-        });
-    }
-
-    function attachTextLogic() {
-      document.querySelectorAll('.bubble-text').forEach(textDiv => {
-        textDiv.addEventListener('input', () => {
-          const bubble = textDiv.parentElement;
-          const maxHeight = bubble.clientHeight;
-          const scrollHeight = textDiv.scrollHeight;
-
-          if (scrollHeight > maxHeight) {
-            textDiv.innerText = textDiv.innerText.slice(0, -1);
-
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.selectNodeContents(textDiv);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-
-          const b = bubbles.find(x => x.id === bubble.id);
-          if (b) b.text = textDiv.innerText;
-        });
-      });
-    }
-
-    function deleteBubble(id) {
-      bubbles = bubbles.filter(b => b.id !== id);
-      renderBubbles();
-    }
-
-    document.getElementById("toggleMode").addEventListener("click", () => {
-      editorMode = !editorMode;
-      document.getElementById("toggleMode").textContent =
-        editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
-      document.getElementById("saveLayout").style.display =
-        editorMode ? "inline-block" : "none";
-      document.getElementById("addBubble").style.display =
-        editorMode ? "inline-block" : "none";
-
-      document.querySelectorAll('.bubble').forEach(b => {
-        if (editorMode) {
-          b.classList.add("editor-mode");
-          b.style.cursor = "move";
-        } else {
-          b.classList.remove("editor-mode");
-          b.style.cursor = "text";
-          b.style.transform = "";
-          b.removeAttribute("data-x");
-          b.removeAttribute("data-y");
-        }
-      });
-    });
-
-    document.getElementById("addBubble").addEventListener("click", () => {
-      const panel = document.getElementById("comicPanel");
-      const rect = panel.getBoundingClientRect();
-
-      const newBubble = {
-        id: "bubble" + bubbleCounter++,
-        top: (rect.height / 2) - 50,
-        left: (rect.width / 2) - 100,
-        width: 200,
-        height: 100,
-        text: ""
-      };
-
-      bubbles.push(newBubble);
-      renderBubbles();
-    });
-
-    document.getElementById("saveLayout").addEventListener("click", () => {
-      const container = document.getElementById("bubbleContainer");
-      const parentRect = container.getBoundingClientRect();
-
-      const newLayout = [];
-
-      document.querySelectorAll('.bubble').forEach(b => {
-        const rect = b.getBoundingClientRect();
-        const textDiv = b.querySelector('.bubble-text');
-
-        newLayout.push({
-          id: b.id,
-          top: rect.top - parentRect.top,
-          left: rect.left - parentRect.left,
-          width: b.offsetWidth,
-          height: b.offsetHeight,
-          text: textDiv ? textDiv.innerText : ""
-        });
-      });
-
-      const json = JSON.stringify(newLayout, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "layout.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("exportPng").addEventListener("click", () => {
-      const panel = document.getElementById("comicPanel");
-
-      const wasEditor = editorMode;
-      if (editorMode) {
-        editorMode = false;
-        document.querySelectorAll('.bubble').forEach(b => {
-          b.classList.remove("editor-mode");
-          b.style.cursor = "text";
-        });
-      }
-
-      html2canvas(panel, { useCORS: true }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "comic.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        if (wasEditor) {
-          editorMode = true;
-          document.querySelectorAll('.bubble').forEach(b => {
-            b.classList.add("editor-mode");
-            b.style.cursor = "move";
-          });
-        }
-      });
-    });
-
-/* NEW: Supabase Submission ----------------------------*/
-   <script type="module">
+      <script type="module">
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
   // Initialize Supabase
@@ -371,11 +221,184 @@
 
   window.supabase = supabase;
 
+  // Restore layout if available
   if (typeof loadLayout === "function") {
     loadLayout();
   }
 
-  /* NEW: Supabase Submission ----------------------------*/
+  // --- All your existing JS continues here ---
+
+  interact('.bubble')
+    .draggable({
+      modifiers: [
+        interact.modifiers.restrictRect({
+          restriction: 'parent',
+          endOnly: true
+        })
+      ],
+      listeners: {
+        move(event) {
+          if (!editorMode) return;
+
+          const target = event.target;
+          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+          target.style.transform = `translate(${x}px, ${y}px)`;
+          target.setAttribute('data-x', x);
+          target.setAttribute('data-y', y);
+        }
+      }
+    })
+    .resizable({
+      edges: { left: true, right: true, bottom: true, top: true }
+    })
+    .on('resizemove', function (event) {
+      if (!editorMode) return;
+
+      const target = event.target;
+      let x = parseFloat(target.getAttribute('data-x')) || 0;
+      let y = parseFloat(target.getAttribute('data-y')) || 0;
+
+      target.style.width = event.rect.width + 'px';
+      target.style.height = event.rect.height + 'px';
+
+      x += event.deltaRect.left;
+      y += event.deltaRect.top;
+
+      target.style.transform = `translate(${x}px, ${y}px)`;
+      target.setAttribute('data-x', x);
+      target.setAttribute('data-y', y);
+    });
+
+  function attachTextLogic() {
+    document.querySelectorAll('.bubble-text').forEach(textDiv => {
+      textDiv.addEventListener('input', () => {
+        const bubble = textDiv.parentElement;
+        const maxHeight = bubble.clientHeight;
+        const scrollHeight = textDiv.scrollHeight;
+
+        if (scrollHeight > maxHeight) {
+          textDiv.innerText = textDiv.innerText.slice(0, -1);
+
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(textDiv);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        const b = bubbles.find(x => x.id === bubble.id);
+        if (b) b.text = textDiv.innerText;
+      });
+    });
+  }
+
+  function deleteBubble(id) {
+    bubbles = bubbles.filter(b => b.id !== id);
+    renderBubbles();
+  }
+
+  document.getElementById("toggleMode").addEventListener("click", () => {
+    editorMode = !editorMode;
+    document.getElementById("toggleMode").textContent =
+      editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
+    document.getElementById("saveLayout").style.display =
+      editorMode ? "inline-block" : "none";
+    document.getElementById("addBubble").style.display =
+      editorMode ? "inline-block" : "none";
+
+    document.querySelectorAll('.bubble').forEach(b => {
+      if (editorMode) {
+        b.classList.add("editor-mode");
+        b.style.cursor = "move";
+      } else {
+        b.classList.remove("editor-mode");
+        b.style.cursor = "text";
+        b.style.transform = "";
+        b.removeAttribute("data-x");
+        b.removeAttribute("data-y");
+      }
+    });
+  });
+
+  document.getElementById("addBubble").addEventListener("click", () => {
+    const panel = document.getElementById("comicPanel");
+    const rect = panel.getBoundingClientRect();
+
+    const newBubble = {
+      id: "bubble" + bubbleCounter++,
+      top: (rect.height / 2) - 50,
+      left: (rect.width / 2) - 100,
+      width: 200,
+      height: 100,
+      text: ""
+    };
+
+    bubbles.push(newBubble);
+    renderBubbles();
+  });
+
+  document.getElementById("saveLayout").addEventListener("click", () => {
+    const container = document.getElementById("bubbleContainer");
+    const parentRect = container.getBoundingClientRect();
+
+    const newLayout = [];
+
+    document.querySelectorAll('.bubble').forEach(b => {
+      const rect = b.getBoundingClientRect();
+      const textDiv = b.querySelector('.bubble-text');
+
+      newLayout.push({
+        id: b.id,
+        top: rect.top - parentRect.top,
+        left: rect.left - parentRect.left,
+        width: b.offsetWidth,
+        height: b.offsetHeight,
+        text: textDiv ? textDiv.innerText : ""
+      });
+    });
+
+    const json = JSON.stringify(newLayout, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "layout.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("exportPng").addEventListener("click", () => {
+    const panel = document.getElementById("comicPanel");
+
+    const wasEditor = editorMode;
+    if (editorMode) {
+      editorMode = false;
+      document.querySelectorAll('.bubble').forEach(b => {
+        b.classList.remove("editor-mode");
+        b.style.cursor = "text";
+      });
+    }
+
+    html2canvas(panel, { useCORS: true }).then(canvas => {
+      const link = document.createElement("a");
+      link.download = "comic.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+
+      if (wasEditor) {
+        editorMode = true;
+        document.querySelectorAll('.bubble').forEach(b => {
+          b.classList.add("editor-mode");
+          b.style.cursor = "move";
+        });
+      }
+    });
+  });
+
+  // --- Supabase Submission ---
   document.getElementById("submitBubbles").addEventListener("click", async () => {
     const submitBtn = document.getElementById("submitBubbles");
 
@@ -427,4 +450,5 @@
       }, 2000);
     }
   });
+
 </script>
