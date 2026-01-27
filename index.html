@@ -127,11 +127,31 @@
     <button id="submitBubbles" style="padding: 10px 20px; font-size: 18px;">Submit</button>
   </div>
 
-  <script>
+  <!-- ⭐ ONE script block only -->
+  <script type="module">
+
+    /* ----------------------------------------------------
+       Supabase Initialization
+    ---------------------------------------------------- */
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://wsqtinlciifzdlwmprso.supabase.co",
+      "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+    );
+
+    window.supabase = supabase;
+
+    /* ----------------------------------------------------
+       Bubble Editor State
+    ---------------------------------------------------- */
     let editorMode = true;
     let bubbles = [];
     let bubbleCounter = 1;
 
+    /* ----------------------------------------------------
+       Load Layout
+    ---------------------------------------------------- */
     async function loadLayout() {
       try {
         const response = await fetch("layout.json");
@@ -150,6 +170,11 @@
       renderBubbles();
     }
 
+    loadLayout();
+
+    /* ----------------------------------------------------
+       Render Bubbles
+    ---------------------------------------------------- */
     function renderBubbles() {
       const container = document.getElementById("bubbleContainer");
       container.innerHTML = "";
@@ -187,6 +212,9 @@
       attachTextLogic();
     }
 
+    /* ----------------------------------------------------
+       Drag + Resize Logic
+    ---------------------------------------------------- */
     function attachBubbleLogic() {
       interact('.bubble')
         .draggable({
@@ -210,245 +238,229 @@
             }
           }
         })
-
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-  // Initialize Supabase
-  const supabase = createClient(
-    "https://wsqtinlciifzdlwmprso.supabase.co",
-    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
-  );
-
-  window.supabase = supabase;
-
-  // Restore layout if available
-  if (typeof loadLayout === "function") {
-    loadLayout();
-  }
-
-  // --- All your existing JS continues here ---
-
-  interact('.bubble')
-    .draggable({
-      modifiers: [
-        interact.modifiers.restrictRect({
-          restriction: 'parent',
-          endOnly: true
+        .resizable({
+          edges: { left: true, right: true, bottom: true, top: true }
         })
-      ],
-      listeners: {
-        move(event) {
+        .on('resizemove', function (event) {
           if (!editorMode) return;
 
           const target = event.target;
-          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+          let x = parseFloat(target.getAttribute('data-x')) || 0;
+          let y = parseFloat(target.getAttribute('data-y')) || 0;
+
+          target.style.width = event.rect.width + 'px';
+          target.style.height = event.rect.height + 'px';
+
+          x += event.deltaRect.left;
+          y += event.deltaRect.top;
 
           target.style.transform = `translate(${x}px, ${y}px)`;
           target.setAttribute('data-x', x);
           target.setAttribute('data-y', y);
-        }
-      }
-    })
-    .resizable({
-      edges: { left: true, right: true, bottom: true, top: true }
-    })
-    .on('resizemove', function (event) {
-      if (!editorMode) return;
+        });
+    }
 
-      const target = event.target;
-      let x = parseFloat(target.getAttribute('data-x')) || 0;
-      let y = parseFloat(target.getAttribute('data-y')) || 0;
+    /* ----------------------------------------------------
+       Text Editing Logic
+    ---------------------------------------------------- */
+    function attachTextLogic() {
+      document.querySelectorAll('.bubble-text').forEach(textDiv => {
+        textDiv.addEventListener('input', () => {
+          const bubble = textDiv.parentElement;
+          const maxHeight = bubble.clientHeight;
+          const scrollHeight = textDiv.scrollHeight;
 
-      target.style.width = event.rect.width + 'px';
-      target.style.height = event.rect.height + 'px';
+          if (scrollHeight > maxHeight) {
+            textDiv.innerText = textDiv.innerText.slice(0, -1);
 
-      x += event.deltaRect.left;
-      y += event.deltaRect.top;
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(textDiv);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
 
-      target.style.transform = `translate(${x}px, ${y}px)`;
-      target.setAttribute('data-x', x);
-      target.setAttribute('data-y', y);
-    });
-
-  function attachTextLogic() {
-    document.querySelectorAll('.bubble-text').forEach(textDiv => {
-      textDiv.addEventListener('input', () => {
-        const bubble = textDiv.parentElement;
-        const maxHeight = bubble.clientHeight;
-        const scrollHeight = textDiv.scrollHeight;
-
-        if (scrollHeight > maxHeight) {
-          textDiv.innerText = textDiv.innerText.slice(0, -1);
-
-          const range = document.createRange();
-          const sel = window.getSelection();
-          range.selectNodeContents(textDiv);
-          range.collapse(false);
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-
-        const b = bubbles.find(x => x.id === bubble.id);
-        if (b) b.text = textDiv.innerText;
-      });
-    });
-  }
-
-  function deleteBubble(id) {
-    bubbles = bubbles.filter(b => b.id !== id);
-    renderBubbles();
-  }
-
-  document.getElementById("toggleMode").addEventListener("click", () => {
-    editorMode = !editorMode;
-    document.getElementById("toggleMode").textContent =
-      editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
-    document.getElementById("saveLayout").style.display =
-      editorMode ? "inline-block" : "none";
-    document.getElementById("addBubble").style.display =
-      editorMode ? "inline-block" : "none";
-
-    document.querySelectorAll('.bubble').forEach(b => {
-      if (editorMode) {
-        b.classList.add("editor-mode");
-        b.style.cursor = "move";
-      } else {
-        b.classList.remove("editor-mode");
-        b.style.cursor = "text";
-        b.style.transform = "";
-        b.removeAttribute("data-x");
-        b.removeAttribute("data-y");
-      }
-    });
-  });
-
-  document.getElementById("addBubble").addEventListener("click", () => {
-    const panel = document.getElementById("comicPanel");
-    const rect = panel.getBoundingClientRect();
-
-    const newBubble = {
-      id: "bubble" + bubbleCounter++,
-      top: (rect.height / 2) - 50,
-      left: (rect.width / 2) - 100,
-      width: 200,
-      height: 100,
-      text: ""
-    };
-
-    bubbles.push(newBubble);
-    renderBubbles();
-  });
-
-  document.getElementById("saveLayout").addEventListener("click", () => {
-    const container = document.getElementById("bubbleContainer");
-    const parentRect = container.getBoundingClientRect();
-
-    const newLayout = [];
-
-    document.querySelectorAll('.bubble').forEach(b => {
-      const rect = b.getBoundingClientRect();
-      const textDiv = b.querySelector('.bubble-text');
-
-      newLayout.push({
-        id: b.id,
-        top: rect.top - parentRect.top,
-        left: rect.left - parentRect.left,
-        width: b.offsetWidth,
-        height: b.offsetHeight,
-        text: textDiv ? textDiv.innerText : ""
-      });
-    });
-
-    const json = JSON.stringify(newLayout, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "layout.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  document.getElementById("exportPng").addEventListener("click", () => {
-    const panel = document.getElementById("comicPanel");
-
-    const wasEditor = editorMode;
-    if (editorMode) {
-      editorMode = false;
-      document.querySelectorAll('.bubble').forEach(b => {
-        b.classList.remove("editor-mode");
-        b.style.cursor = "text";
+          const b = bubbles.find(x => x.id === bubble.id);
+          if (b) b.text = textDiv.innerText;
+        });
       });
     }
 
-    html2canvas(panel, { useCORS: true }).then(canvas => {
-      const link = document.createElement("a");
-      link.download = "comic.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+    /* ----------------------------------------------------
+       Delete Bubble
+    ---------------------------------------------------- */
+    function deleteBubble(id) {
+      bubbles = bubbles.filter(b => b.id !== id);
+      renderBubbles();
+    }
 
-      if (wasEditor) {
-        editorMode = true;
-        document.querySelectorAll('.bubble').forEach(b => {
+    /* ----------------------------------------------------
+       Toggle Mode
+    ---------------------------------------------------- */
+    document.getElementById("toggleMode").addEventListener("click", () => {
+      editorMode = !editorMode;
+      document.getElementById("toggleMode").textContent =
+        editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
+      document.getElementById("saveLayout").style.display =
+        editorMode ? "inline-block" : "none";
+      document.getElementById("addBubble").style.display =
+        editorMode ? "inline-block" : "none";
+
+      document.querySelectorAll('.bubble').forEach(b => {
+        if (editorMode) {
           b.classList.add("editor-mode");
           b.style.cursor = "move";
-        });
-      }
+        } else {
+          b.classList.remove("editor-mode");
+          b.style.cursor = "text";
+          b.style.transform = "";
+          b.removeAttribute("data-x");
+          b.removeAttribute("data-y");
+        }
+      });
     });
-  });
 
-  // --- Supabase Submission ---
-  document.getElementById("submitBubbles").addEventListener("click", async () => {
-    const submitBtn = document.getElementById("submitBubbles");
+    /* ----------------------------------------------------
+       Add Bubble
+    ---------------------------------------------------- */
+    document.getElementById("addBubble").addEventListener("click", () => {
+      const panel = document.getElementById("comicPanel");
+      const rect = panel.getBoundingClientRect();
 
-    const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+      const newBubble = {
+        id: "bubble" + bubbleCounter++,
+        top: (rect.height / 2) - 50,
+        left: (rect.width / 2) - 100,
+        width: 200,
+        height: 100,
+        text: ""
+      };
 
-    if (!allFilled) {
-      submitBtn.textContent = "Complete the text first";
-      submitBtn.style.backgroundColor = "#e81123";
-      submitBtn.style.color = "white";
+      bubbles.push(newBubble);
+      renderBubbles();
+    });
 
-      setTimeout(() => {
-        submitBtn.textContent = "Submit";
-        submitBtn.style.backgroundColor = "";
-        submitBtn.style.color = "";
-      }, 2000);
+    /* ----------------------------------------------------
+       Save Layout
+    ---------------------------------------------------- */
+    document.getElementById("saveLayout").addEventListener("click", () => {
+      const container = document.getElementById("bubbleContainer");
+      const parentRect = container.getBoundingClientRect();
 
-      return;
-    }
+      const newLayout = [];
 
-    const layout = bubbles.map(b => ({
-      id: b.id,
-      top: b.top,
-      left: b.left,
-      width: b.width,
-      height: b.height,
-      text: b.text
-    }));
+      document.querySelectorAll('.bubble').forEach(b => {
+        const rect = b.getBoundingClientRect();
+        const textDiv = b.querySelector('.bubble-text');
 
-    const combinedText = layout
-      .map(b => `${b.id}: ${b.text}`)
-      .join("\n");
-
-    const { data, error } = await window.supabase
-      .from("submissions")
-      .insert({
-        content: combinedText,
-        layout_json: layout
+        newLayout.push({
+          id: b.id,
+          top: rect.top - parentRect.top,
+          left: rect.left - parentRect.left,
+          width: b.offsetWidth,
+          height: b.offsetHeight,
+          text: textDiv ? textDiv.innerText : ""
+        });
       });
 
-    if (!error) {
-      submitBtn.textContent = "Submitted!";
-      submitBtn.style.backgroundColor = "#107c10";
-      submitBtn.style.color = "white";
+      const json = JSON.stringify(newLayout, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "layout.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
-      setTimeout(() => {
-        submitBtn.textContent = "Submit";
-        submitBtn.style.backgroundColor = "";
-        submitBtn.style.color = "";
-      }, 2000);
-    }
-  });
+    /* ----------------------------------------------------
+       Export PNG
+    ---------------------------------------------------- */
+    document.getElementById("exportPng").addEventListener("click", () => {
+      const panel = document.getElementById("comicPanel");
 
-</script>
+      const wasEditor = editorMode;
+      if (editorMode) {
+        editorMode = false;
+        document.querySelectorAll('.bubble').forEach(b => {
+          b.classList.remove("editor-mode");
+          b.style.cursor = "text";
+        });
+      }
+
+      html2canvas(panel, { useCORS: true }).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comic.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+
+        if (wasEditor) {
+          editorMode = true;
+          document.querySelectorAll('.bubble').forEach(b => {
+            b.classList.add("editor-mode");
+            b.style.cursor = "move";
+          });
+        }
+      });
+    });
+
+    /* ----------------------------------------------------
+       Submit to Supabase
+    ---------------------------------------------------- */
+    document.getElementById("submitBubbles").addEventListener("click", async () => {
+      const submitBtn = document.getElementById("submitBubbles");
+
+      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+
+      if (!allFilled) {
+        submitBtn.textContent = "Complete the text first";
+        submitBtn.style.backgroundColor = "#e81123";
+        submitBtn.style.color = "white";
+
+        setTimeout(() => {
+          submitBtn.textContent = "Submit";
+          submitBtn.style.backgroundColor = "";
+          submitBtn.style.color = "";
+        }, 2000);
+
+        return;
+      }
+
+      const layout = bubbles.map(b => ({
+        id: b.id,
+        top: b.top,
+        left: b.left,
+        width: b.width,
+        height: b.height,
+        text: b.text
+      }));
+
+      const combinedText = layout
+        .map(b => `${b.id}: ${b.text}`)
+        .join("\n");
+
+      const { data, error } = await window.supabase
+        .from("submissions")
+        .insert({
+          content: combinedText,
+          layout_json: layout
+        });
+
+      if (!error) {
+        submitBtn.textContent = "Submitted!";
+        submitBtn.style.backgroundColor = "#107c10";
+        submitBtn.style.color = "white";
+
+        setTimeout(() => {
+          submitBtn.textContent = "Submit";
+          submitBtn.style.backgroundColor = "";
+          submitBtn.style.color = "";
+        }, 2000);
+      }
+    });
+
+  </script>
+
+</body>
+</html>
