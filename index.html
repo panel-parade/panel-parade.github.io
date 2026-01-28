@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Panel Parade – Bubble Editor</title>
 
+  <!-- ⭐ Load Kalam comic-lettering font -->
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -70,11 +73,20 @@
       outline: 1px dashed red;
     }
 
+    /* ⭐ Comic lettering style applied to bubble text */
     .bubble-text {
       width: 100%;
       height: 100%;
       outline: none;
       cursor: text;
+
+      font-family: 'Kalam', cursive;
+      font-size: 28px;
+      line-height: 1.3;
+      letter-spacing: 0.5px;
+      color: #111;
+
+      text-shadow: 0px 2px 3px rgba(0,0,0,0.15);
     }
 
     .bubble-text[contenteditable="true"]:focus {
@@ -405,47 +417,48 @@
       });
     });
 
-  /* ----------------------------------------------------
-   Upload PNG to Supabase Storage (with diagnostics)
----------------------------------------------------- */
-async function uploadPngToSupabase(canvas) {
-  console.log("Starting PNG upload...");
-
-  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-  console.log("Blob generated:", blob);
-
-  if (!blob) {
-    console.error("❌ Blob is null — html2canvas failed.");
-    return null;
-  }
-
-  const filename = `comic_${Date.now()}.png`;
-  console.log("Uploading as:", filename);
-
-  const { data, error } = await supabase.storage
-    .from("comics")
-    .upload(filename, blob, {
-      contentType: "image/png",
-      upsert: false
-    });
-
-  console.log("Upload result:", data, error);
-
-  if (error) {
-    console.error("❌ Upload error:", error);
-    return null;
-  }
-
-  const { data: publicUrlData } = supabase.storage
-    .from("comics")
-    .getPublicUrl(filename);
-
-  console.log("Public URL:", publicUrlData);
-
-  return publicUrlData.publicUrl;
-}
     /* ----------------------------------------------------
-       Submit to Supabase (text + layout + PNG upload)
+       Upload PNG to Supabase Storage
+    ---------------------------------------------------- */
+    async function uploadPngToSupabase(canvas) {
+      console.log("Starting PNG upload...");
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+      console.log("Blob generated:", blob);
+
+      if (!blob) {
+        console.error("❌ Blob is null — html2canvas failed.");
+        return null;
+      }
+
+      const filename = `comic_${Date.now()}.png`;
+      console.log("Uploading as:", filename);
+
+      const { data, error } = await supabase.storage
+        .from("comics")
+        .upload(filename, blob, {
+          contentType: "image/png",
+          upsert: false
+        });
+
+      console.log("Upload result:", data, error);
+
+      if (error) {
+        console.error("❌ Upload error:", error);
+        return null;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("comics")
+        .getPublicUrl(filename);
+
+      console.log("Public URL:", publicUrlData);
+
+      return publicUrlData.publicUrl;
+    }
+
+    /* ----------------------------------------------------
+       Submit to Supabase
     ---------------------------------------------------- */
     document.getElementById("submitBubbles").addEventListener("click", async () => {
       const submitBtn = document.getElementById("submitBubbles");
