@@ -282,17 +282,6 @@
           const maxHeight = bubble.clientHeight;
           const scrollHeight = textDiv.scrollHeight;
 
-          if (scrollHeight > maxHeight) {
-            textDiv.innerText = textDiv.innerText.slice(0, -1);
-
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.selectNodeContents(textDiv);
-            range.collapse(false);
-            sel.removeAllRanges();
-            sel.addRange(range);
-          }
-
           const b = bubbles.find(x => x.id === bubble.id);
           if (b) b.text = textDiv.innerText;
         });
