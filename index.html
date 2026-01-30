@@ -540,7 +540,11 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
   }
 });
 
-  </script>
+  setTimeout(() => {
+    document.querySelectorAll('.sbui-userinfo, #supabase-auth-ui')
+      .forEach(el => el.remove());
+  }, 100);
+</script>
 
 </body>
 </html>
