@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -135,7 +136,9 @@
     <div id="bubbleContainer"></div>
   </div>
 
+ 
   <div style="margin-top: 20px;">
+  <input type="text" id="username" placeholder="Your name (optional)">
     <button id="submitBubbles" style="padding: 10px 20px; font-size: 18px;">Submit</button>
   </div>
 
@@ -447,67 +450,91 @@
     }
 
     /* ----------------------------------------------------
-       Submit to Supabase
-    ---------------------------------------------------- */
-    document.getElementById("submitBubbles").addEventListener("click", async () => {
-      const submitBtn = document.getElementById("submitBubbles");
+   Submit to Supabase
+---------------------------------------------------- */
+document.getElementById("submitBubbles").addEventListener("click", async () => {
+  const submitBtn = document.getElementById("submitBubbles");
 
-      const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
+  const allFilled = bubbles.every(b => b.text && b.text.trim().length > 0);
 
-      if (!allFilled) {
-        submitBtn.textContent = "Complete the text first";
-        submitBtn.style.backgroundColor = "#e81123";
-        submitBtn.style.color = "white";
+  if (!allFilled) {
+    submitBtn.textContent = "Complete the text first";
+    submitBtn.style.backgroundColor = "#e81123";
+    submitBtn.style.color = "white";
 
-        setTimeout(() => {
-          submitBtn.textContent = "Submit";
-          submitBtn.style.backgroundColor = "";
-          submitBtn.style.color = "";
-        }, 2000);
+    setTimeout(() => {
+      submitBtn.textContent = "Submit";
+      submitBtn.style.backgroundColor = "";
+      submitBtn.style.color = "";
+    }, 2000);
 
-        return;
-      }
+    return;
+  }
 
-      const layout = bubbles.map(b => ({
-        id: b.id,
-        top: b.top,
-        left: b.left,
-        width: b.width,
-        height: b.height,
-        text: b.text
-      }));
+  // NEW: username field
+  const usernameInput = document.getElementById("username");
+  const username = usernameInput?.value?.trim() || "Anonymous";
 
-      const combinedText = layout
-        .map(b => `${b.id}: ${b.text}`)
-        .join("\n");
+  // NEW: strip_id generator
+  function getOrCreateStripId() {
+    let id = localStorage.getItem("strip_id");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("strip_id", id);
+    }
+    return id;
+  }
 
-      const panel = document.getElementById("comicPanel");
-      const canvas = await html2canvas(panel, { useCORS: true });
+  const strip_id = getOrCreateStripId();
 
-      const imageUrl = await uploadPngToSupabase(canvas);
+  const layout = bubbles.map(b => ({
+    id: b.id,
+    top: b.top,
+    left: b.left,
+    width: b.width,
+    height: b.height,
+    text: b.text
+  }));
 
-      const { data, error } = await supabase
-        .from("submissions")
-        .insert({
-          content: combinedText,
-          layout_json: layout,
-          image_url: imageUrl
-        });
+  const combinedText = layout
+    .map(b => `${b.id}: ${b.text}`)
+    .join("\n");
 
-      if (!error) {
-        submitBtn.textContent = "Submitted!";
-        submitBtn.style.backgroundColor = "#107c10";
-        submitBtn.style.color = "white";
+  const panel = document.getElementById("comicPanel");
+  const canvas = await html2canvas(panel, { useCORS: true });
 
-        setTimeout(() => {
-          submitBtn.textContent = "Submit";
-          submitBtn.style.backgroundColor = "";
-          submitBtn.style.color = "";
-        }, 2000);
-      }
+  const imageUrl = await uploadPngToSupabase(canvas);
+
+  // UPDATED INSERT
+  const { data, error } = await supabase
+    .from("submissions")
+    .insert({
+      username,
+      strip_id,
+      content: combinedText,
+      layout_json: layout,
+      image_url: imageUrl,
+      approved: false,
+      status: "pending"
     });
+
+  if (!error) {
+    submitBtn.textContent = "Submitted!";
+    submitBtn.style.backgroundColor = "#107c10";
+    submitBtn.style.color = "white";
+
+    setTimeout(() => {
+      submitBtn.textContent = "Submit";
+      submitBtn.style.backgroundColor = "";
+      submitBtn.style.color = "";
+    }, 2000);
+  }
+});
 
   </script>
 
 </body>
 </html>
+
+demonbeavis@gmail.com
+
