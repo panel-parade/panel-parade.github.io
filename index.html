@@ -182,7 +182,73 @@
   );
 
   window.supabase = supabase;
+// Track auth state
+supabase.auth.onAuthStateChange((event, session) => {
+  updateAuthUI(session);
+  updateEditorPermissions(session);
+});
 
+// Render login/logout UI
+function updateAuthUI(session) {
+  const box = document.getElementById("auth-controls");
+
+  if (session?.user) {
+    box.innerHTML = `
+      <span>Logged in as ${session.user.email}</span>
+      <button id="logoutBtn" style="margin-left:10px;">Logout</button>
+    `;
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await supabase.auth.signOut();
+    };
+
+  } else {
+    box.innerHTML = `
+      <button id="loginBtn">Login</button>
+    `;
+
+    document.getElementById("loginBtn").onclick = () => {
+      const email = prompt("Enter your email to receive a login link:");
+      if (!email) return;
+
+      // Restrict login to admin email only
+      if (email.toLowerCase() !== "demonbeavis@gmail.com") {
+        alert("This site is for viewing only. Editing requires admin access.");
+        return;
+      }
+
+      supabase.auth.signInWithOtp({ email });
+      alert("Magic login link sent!");
+    };
+  }
+}
+
+// Editor permissions
+function updateEditorPermissions(session) {
+  const isAdmin = !!session?.user;
+
+  document.getElementById("toggleMode").disabled = !isAdmin;
+
+  if (!isAdmin) {
+    editorMode = false;
+    document.getElementById("toggleMode").textContent = "Editor Mode (login required)";
+    document.getElementById("addBubble").style.display = "none";
+
+    document.querySelectorAll('.bubble').forEach(b => {
+      b.classList.remove("editor-mode");
+      b.style.cursor = "text";
+      b.style.transform = "";
+      b.removeAttribute("data-x");
+      b.removeAttribute("data-y");
+    });
+  }
+}
+
+// Load initial auth state
+supabase.auth.getSession().then(({ data }) => {
+  updateAuthUI(data.session);
+  updateEditorPermissions(data.session);
+});
   /* ----------------------------------------------------
      Bubble Editor State
   ---------------------------------------------------- */
