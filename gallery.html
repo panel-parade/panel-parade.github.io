@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Gallery</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js?fresh=999999"></script>
+
   <style>
     body {
       font-family: sans-serif;
@@ -29,16 +31,55 @@
     }
   </style>
 </head>
+
 <body>
 
 <h1>Comic Gallery</h1>
 <div id="gallery">Loading…</div>
 
 <script>
-  const client = supabase.createClient(
-    "https://wsqtinlciifzdlwmprso.supabase.co",
-    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
-  );
+console.log("SCRIPT IS RUNNING");
+
+const client = supabase.createClient(
+  "https://wsqtinlciifzdlwmprso.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcXRpbmxjaWlmemRsd21wcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0Mjk1MjgsImV4cCI6MjA4NTAwNTUyOH0.0KghM7HVeCJHbrIAKKzL38Yy44NxJZBZ1t49m8mjh0s"
+);
+
+console.log("CLIENT OBJECT:", client);
+
+async function loadGallery() {
+  const { data: submissions, error } = await client
+    .from("submissions")
+    .select("*")
+    .eq("approved", true)
+    .order("created_at", { ascending: false });
+
+  console.log("Approved submissions:", submissions);
+  console.log("First row:", submissions[0]);
+
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = ""; // Clear
+
+  submissions.forEach(sub => {
+    console.log("Rendering:", sub);
+
+    const item = document.createElement("div");
+    item.className = "item";
+
+    const img = document.createElement("img");
+    img.src = sub.image_url;   // adjust if needed
+    img.alt = sub.title || "Comic strip";
+
+    const title = document.createElement("h3");
+	title.textContent = sub.title || "";
+
+    item.appendChild(img);
+    item.appendChild(title);
+    gallery.appendChild(item);
+  });
+}
+
+loadGallery();
 </script>
 
 </body>
