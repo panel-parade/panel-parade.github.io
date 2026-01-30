@@ -90,6 +90,24 @@ async function loadStrip() {
 }
 
 loadStrip();
+
+  // Render "Other Versions"
+const list = document.getElementById("versions");
+list.innerHTML = "";
+
+versions.slice(1).forEach(v => {
+  const item = document.createElement("div");
+  item.className = "version-item";
+
+  item.innerHTML = `
+    <a href="strip.html?id=${v.strip_id}">
+      Version from ${new Date(v.created_at).toLocaleString()}
+    </a>
+  `;
+
+  list.appendChild(item);
+});
+  
 </script>
 
 </body>
