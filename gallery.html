@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Gallery</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js?fresh=999999"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
 
   <style>
     body {
@@ -17,17 +17,11 @@
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 20px;
     }
-    .item {
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .item img {
+    .thumb img {
       width: 100%;
-      height: auto;
-      border-radius: 4px;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
     }
   </style>
 </head>
@@ -38,23 +32,7 @@
 <div id="gallery">Loading…</div>
 
 <script>
-console.log("SCRIPT IS RUNNING");
-
-const client = supabase.createClient(
-  "https://wsqtinlciifzdlwmprso.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcXRpbmxjaWlmemRsd21wcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0Mjk1MjgsImV4cCI6MjA4NTAwNTUyOH0.0KghM7HVeCJHbrIAKKzL38Yy44NxJZBZ1t49m8mjh0s"
-);
-
-console.log("CLIENT OBJECT:", client);
-
-async function loadGallery() {
-  const { data: submissions, error } = await client
-    .from("submissions")
-    .select("*")
-    .eq("approved", true)
-    .order("created_at", { ascending: false });
-
- console.log("gallery running");
+console.log("Gallery script running");
 
 // Supabase client (UMD build)
 const client = window.supabase.createClient(
@@ -86,29 +64,6 @@ async function loadGallery() {
     groups[row.strip_id].push(row);
   }
 
-  // For each strip_id, pick the newest version
+  // Pick newest version per strip
   const featured = Object.values(groups).map(
-    versions => versions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
-  );
-
-  // Render thumbnails
-  gallery.innerHTML = "";
-  for (const strip of featured) {
-    const div = document.createElement("div");
-    div.className = "thumb";
-
-    div.innerHTML = `
-      <a href="strip.html?id=${strip.strip_id}">
-        <img src="${strip.image_url}" alt="Comic Strip" style="width:150px; border-radius:6px;">
-      </a>
-    `;
-
-    gallery.appendChild(div);
-  }
-}
-
-loadGallery();
-</script>
-
-</body>
-</html>
+    versions => versions.sort((a, b) =>
