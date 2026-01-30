@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Comic Strip</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    #main-strip {
+      max-width: 600px;
+      margin: 0 auto 40px auto;
+      text-align: center;
+    }
+    #main-strip img {
+      width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    #versions {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .version-item {
+      margin-bottom: 20px;
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Comic Strip</h1>
+
+<div id="main-strip">Loading…</div>
+<h2>Other Versions</h2>
+<div id="versions"></div>
+
+<script>
+console.log("strip.html running");
+
+// Supabase client (UMD build)
+const client = window.supabase.createClient(
+  "https://wsqtinlciifzdlwmprso.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcXRpbmxjaWlmemRsd21wcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0Mjk1MjgsImV4cCI6MjA4NTAwNTUyOH0.0KghM7HVeCJHbrIAKKzL38Yy44NxJZBZ1t49m8mjh0s"
+);
+
+// Read ?id=... from URL
+const params = new URLSearchParams(window.location.search);
+const stripId = params.get("id");
+console.log("stripId:", stripId);
+
+async function loadStrip() {
+  if (!stripId) {
+    document.getElementById("main-strip").textContent = "No strip ID provided.";
+    return;
+  }
+
+  // Fetch all versions of this strip
+  const { data: versions, error } = await client
+    .from("submissions")
+    .select("*")
+    .eq("strip_id", stripId)
+    .order("created_at", { ascending: false });
+
+  console.log("Versions:", versions, error);
+
+  if (!versions || versions.length === 0) {
+    document.getElementById("main-strip").textContent = "Strip not found.";
+    return;
+  }
+
+  // Featured version = newest
+  const featured = versions[0];
+
+  // Render main strip
+  const main = document.getElementById("main-strip");
+  main.innerHTML = `
+    <img src="${featured.image_url}" alt="Comic Strip" style="max-width:100%; height:auto;">
+    <p>Created: ${new Date(featured.created_at).toLocaleString()}</p>
+  `;
+}
+
+loadStrip();
+</script>
+
+</body>
+</html>
