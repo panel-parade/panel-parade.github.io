@@ -288,9 +288,6 @@
       document.querySelectorAll('.bubble-text').forEach(textDiv => {
         textDiv.addEventListener('input', () => {
           const bubble = textDiv.parentElement;
-          const maxHeight = bubble.clientHeight;
-          const scrollHeight = textDiv.scrollHeight;
-
           const b = bubbles.find(x => x.id === bubble.id);
           if (b) b.text = textDiv.innerText;
         });
@@ -312,8 +309,6 @@
       editorMode = !editorMode;
       document.getElementById("toggleMode").textContent =
         editorMode ? "Switch to User Mode" : "Switch to Editor Mode";
-      document.getElementById("saveLayout").style.display =
-        editorMode ? "inline-block" : "none";
       document.getElementById("addBubble").style.display =
         editorMode ? "inline-block" : "none";
 
