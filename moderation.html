@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Moderation Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    h1, h2 {
+      margin-bottom: 10px;
+    }
+
+    #auth, #dashboard {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 8px 14px;
+      background: #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: #bbb;
+      font-weight: bold;
+    }
+
+    .item {
+      background: white;
+      border: 2px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .item.approved {
+      border-color: #4CAF50;
+      background: #e9f7ec;
+    }
+
+    .item.rejected {
+      border-color: #d9534f;
+      background: #fbeaea;
+    }
+
+    .item img {
+      width: 300px;
+      height: auto;
+      background: #ddd;
+      display: block;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .buttons {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .approve-btn {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .reject-btn {
+      background: #d9534f;
+      color: white;
+    }
+
+    .pending-btn {
+      background: #888;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    pre {
+      white-space: pre-wrap;
+      background: #fafafa;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Moderation Dashboard</h1>
+
+<div id="auth">
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button id="loginBtn">Login</button>
+</div>
+
+<div id="dashboard" style="display:none;">
+  <div class="tabs">
+    <div class="tab active" data-tab="pending">Pending</div>
+    <div class="tab" data-tab="approved">Approved</div>
+    <div class="tab" data-tab="rejected">Rejected</div>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+  const client = supabase.createClient(
+    "https://wsqtinlciifzdlwmprso.supabase.co",
+    "sb_publishable_Sh-WEoLS23OOcG21ikgGYQ_LpQzDQRY"
+  );
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  async function loadItems(status) {
+    const { data, error } = await client
+      .from("submissions")
+      .select("*")
+      .eq("status", status)
+      .order("created_at", { ascending: false });
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    if (!data) return;
+
+    data.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "item " + item.status;
+      div.dataset.id = item.id;
+
+      const safeContent = escapeHtml(item.content || "");
+      const imgSrc = item.image_url || "https://placehold.co/300x200?text=No+Image";
+
+      let buttons = "";
+
+      if (item.status === "pending") {
+        buttons = `
+          <div class="buttons">
+            <button class="approve-btn" onclick="approve('${item.id}')">Approve</button>
+            <button class="reject-btn" onclick="rejectItem('${item.id}')">Reject</button>
+          </div>
+        `;
+      }
+
+      if (item.status === "approved") {
+        buttons = `
+          <div class="buttons">
+            <button class="reject-btn" onclick="rejectItem('${item.id}')">Reject</button>
+            <button class="pending-btn" onclick="markPending('${item.id}')">Move to Pending</button>
+          </div>
+        `;
+      }
+
+      if (item.status === "rejected") {
+        buttons = `
+          <div class="buttons">
+            <button class="approve-btn" onclick="approve('${item.id}')">Approve</button>
+            <button class="pending-btn" onclick="markPending('${item.id}')">Move to Pending</button>
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <img src="${imgSrc}">
+        <pre>${safeContent}</pre>
+        ${buttons}
+      `;
+
+      list.appendChild(div);
+    });
+  }
+
+  async function approve(id) {
+    await client.from("submissions")
+      .update({ approved: true, status: "approved" })
+      .eq("id", id);
+
+    reloadCurrentTab();
+  }
+
+  async function rejectItem(id) {
+    await client.from("submissions")
+      .update({ approved: false, status: "rejected" })
+      .eq("id", id);
+
+    reloadCurrentTab();
+  }
+
+  async function markPending(id) {
+    await client.from("submissions")
+      .update({ approved: false, status: "pending" })
+      .eq("id", id);
+
+    reloadCurrentTab();
+  }
+
+  function reloadCurrentTab() {
+    const active = document.querySelector(".tab.active").dataset.tab;
+    loadItems(active);
+  }
+
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      const status = tab.dataset.tab;
+      loadItems(status);
+    });
+  });
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (!error) {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      loadItems("pending");
+    } else {
+      alert("Login failed");
+    }
+  });
+</script>
+
+</body>
+</html>
