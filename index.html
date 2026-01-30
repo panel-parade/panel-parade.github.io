@@ -545,7 +545,19 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
       .forEach(el => el.remove());
   }, 100);
 </script>
+<script>
+  // Remove any stray text nodes containing the signed-in email
+  setTimeout(() => {
+    const body = document.body;
 
+    // Look for any text nodes that contain an @ symbol
+    body.childNodes.forEach(node => {
+      if (node.nodeType === Node.TEXT_NODE && node.textContent.includes("@")) {
+        node.textContent = "";
+      }
+    });
+  }, 50);
+</script>
 </body>
 </html>
 
