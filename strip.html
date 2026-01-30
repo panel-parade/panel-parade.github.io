@@ -41,11 +41,29 @@
 
 <body>
   
-<nav class="navbar">
+    /* Navigation bar */
+    .navbar {
+      display: flex;
+      gap: 20px;
+      padding: 10px 0;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      font-size: 16px;
+    }
+
+    .navbar a {
+      text-decoration: none;
+      color: #3366cc;
+    }
+
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+  <nav class="navbar">
   <a href="index.html">Home</a>
   <a href="gallery.html">Gallery</a>
 </nav>
-
+  
 <h1>Comic Strip</h1>
 
 <div id="main-strip">Loading…</div>
