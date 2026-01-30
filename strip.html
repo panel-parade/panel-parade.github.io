@@ -91,7 +91,8 @@ async function loadStrip() {
   const main = document.getElementById("main-strip");
   main.innerHTML = `
     <img src="${featured.image_url}" alt="Comic Strip">
-    <p>Created: ${new Date(featured.created_at).toLocaleString()}</p>
+    ${featured.username ? `<p><strong>Submitted by:</strong> ${featured.username}</p>` : ""}
+    <p><strong>Created:</strong> ${new Date(featured.created_at).toLocaleString()}</p>
   `;
 
   // Render all older versions inline
@@ -104,7 +105,8 @@ async function loadStrip() {
 
     block.innerHTML = `
       <img src="${v.image_url}" alt="Comic Strip Version">
-      <p>Created: ${new Date(v.created_at).toLocaleString()}</p>
+      ${v.username ? `<p><strong>Submitted by:</strong> ${v.username}</p>` : ""}
+      <p><strong>Created:</strong> ${new Date(v.created_at).toLocaleString()}</p>
     `;
 
     list.appendChild(block);
