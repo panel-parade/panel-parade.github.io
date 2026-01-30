@@ -54,29 +54,57 @@ async function loadGallery() {
     .eq("approved", true)
     .order("created_at", { ascending: false });
 
-  console.log("Approved submissions:", submissions);
-  console.log("First row:", submissions[0]);
+ console.log("gallery running");
 
+// Supabase client (UMD build)
+const client = window.supabase.createClient(
+  "https://wsqtinlciifzdlwmprso.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcXRpbmxjaWlmemRsd21wcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0Mjk1MjgsImV4cCI6MjA4NTAwNTUyOH0.0KghM7HVeCJHbrIAKKzL38Yy44NxJZBZ1t49m8mjh0s"
+);
+
+async function loadGallery() {
   const gallery = document.getElementById("gallery");
-  gallery.innerHTML = ""; // Clear
 
-  submissions.forEach(sub => {
-    console.log("Rendering:", sub);
+  // Fetch all approved submissions
+  const { data, error } = await client
+    .from("submissions")
+    .select("*")
+    .eq("approved", true)
+    .order("created_at", { ascending: false });
 
-    const item = document.createElement("div");
-    item.className = "item";
+  console.log("Gallery data:", data, error);
 
-    const img = document.createElement("img");
-    img.src = sub.image_url;   // adjust if needed
-    img.alt = sub.title || "Comic strip";
+  if (!data || data.length === 0) {
+    gallery.textContent = "No strips yet.";
+    return;
+  }
 
-    const title = document.createElement("h3");
-	title.textContent = sub.title || "";
+  // Group by strip_id
+  const groups = {};
+  for (const row of data) {
+    if (!groups[row.strip_id]) groups[row.strip_id] = [];
+    groups[row.strip_id].push(row);
+  }
 
-    item.appendChild(img);
-    item.appendChild(title);
-    gallery.appendChild(item);
-  });
+  // For each strip_id, pick the newest version
+  const featured = Object.values(groups).map(
+    versions => versions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]
+  );
+
+  // Render thumbnails
+  gallery.innerHTML = "";
+  for (const strip of featured) {
+    const div = document.createElement("div");
+    div.className = "thumb";
+
+    div.innerHTML = `
+      <a href="strip.html?id=${strip.strip_id}">
+        <img src="${strip.image_url}" alt="Comic Strip" style="width:150px; border-radius:6px;">
+      </a>
+    `;
+
+    gallery.appendChild(div);
+  }
 }
 
 loadGallery();
