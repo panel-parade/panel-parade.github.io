@@ -132,13 +132,10 @@
   <div id="controls">
     <button id="toggleMode">Switch to User Mode</button>
     <button id="addBubble">Add Bubble</button>
-    <button id="saveLayout">Save Layout</button>
-    <button id="exportPng">Export as PNG</button>
   </div>
 
   <p id="instructions" style="margin-bottom: 15px; font-size: 18px;">
     Enter your text in the speech bubbles and then press Submit.
-  </p>
 
   <div class="panel" id="comicPanel">
     <img src="images/Buster Brown empty bubbles test1.jpg" alt="Comic">
@@ -355,70 +352,6 @@
     });
 
     /* ----------------------------------------------------
-       Save Layout
-    ---------------------------------------------------- */
-    document.getElementById("saveLayout").addEventListener("click", () => {
-      const container = document.getElementById("bubbleContainer");
-      const parentRect = container.getBoundingClientRect();
-
-      const newLayout = [];
-
-      document.querySelectorAll('.bubble').forEach(b => {
-        const rect = b.getBoundingClientRect();
-        const textDiv = b.querySelector('.bubble-text');
-
-        newLayout.push({
-          id: b.id,
-          top: rect.top - parentRect.top,
-          left: rect.left - parentRect.left,
-          width: b.offsetWidth,
-          height: b.offsetHeight,
-          text: textDiv ? textDiv.innerText : ""
-        });
-      });
-
-      const json = JSON.stringify(newLayout, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "layout.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    /* ----------------------------------------------------
-       Export PNG (local download only)
-    ---------------------------------------------------- */
-    document.getElementById("exportPng").addEventListener("click", () => {
-      const panel = document.getElementById("comicPanel");
-
-      const wasEditor = editorMode;
-      if (editorMode) {
-        editorMode = false;
-        document.querySelectorAll('.bubble').forEach(b => {
-          b.classList.remove("editor-mode");
-          b.style.cursor = "text";
-        });
-      }
-
-      html2canvas(panel, { useCORS: true }).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "comic.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-        if (wasEditor) {
-          editorMode = true;
-          document.querySelectorAll('.bubble').forEach(b => {
-            b.classList.add("editor-mode");
-            b.style.cursor = "move";
-          });
-        }
-      });
-    });
-
-    /* ----------------------------------------------------
        Upload PNG to Supabase Storage
     ---------------------------------------------------- */
     async function uploadPngToSupabase(canvas) {
@@ -540,26 +473,6 @@ document.getElementById("submitBubbles").addEventListener("click", async () => {
   }
 });
 
-  setTimeout(() => {
-    document.querySelectorAll('.sbui-userinfo, #supabase-auth-ui')
-      .forEach(el => el.remove());
-  }, 100);
-</script>
-<script>
-  // Remove any stray text nodes containing the signed-in email
-  setTimeout(() => {
-    const body = document.body;
-
-    // Look for any text nodes that contain an @ symbol
-    body.childNodes.forEach(node => {
-      if (node.nodeType === Node.TEXT_NODE && node.textContent.includes("@")) {
-        node.textContent = "";
-      }
-    });
-  }, 50);
 </script>
 </body>
 </html>
-
-demonbeavis@gmail.com
-
