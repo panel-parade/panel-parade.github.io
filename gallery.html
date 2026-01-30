@@ -67,3 +67,28 @@ async function loadGallery() {
   // Pick newest version per strip
   const featured = Object.values(groups).map(
     versions => versions.sort((a, b) =>
+      new Date(b.created_at) - new Date(a.created_at)
+    )[0]
+  );
+
+  // Render thumbnails
+  gallery.innerHTML = "";
+  for (const strip of featured) {
+    const div = document.createElement("div");
+    div.className = "thumb";
+
+    div.innerHTML = `
+      <a href="strip.html?id=${strip.strip_id}">
+        <img src="${strip.image_url}" alt="Comic Strip">
+      </a>
+    `;
+
+    gallery.appendChild(div);
+  }
+}
+
+loadGallery();
+</script>
+
+</body>
+</html>
