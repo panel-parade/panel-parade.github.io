@@ -59,8 +59,9 @@
 <nav class="navbar">
   <a href="index.html">Home</a>
   <a href="gallery.html">Gallery</a>
+  <span id="auth-controls" style="margin-left:auto;"></span>
 </nav>
-
+  
 <h1>Comic Strip</h1>
 
 <div id="main-strip">Loading…</div>
@@ -80,7 +81,58 @@ const client = window.supabase.createClient(
 // Read ?id=... from URL
 const params = new URLSearchParams(window.location.search);
 const stripId = params.get("id");
+<script>
+// Supabase client
+const client = window.supabase.createClient(
+  "https://wsqtinlciifzdlwmprso.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzcXRpbmxjaWlmemRsd21wcnNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0Mjk1MjgsImV4cCI6MjA4NTAwNTUyOH0.0KghM7HVeCJHbrIAKKzL38Yy44NxJZBZ1t49m8mjh0s"
+);
 
+// -----------------------------
+// AUTH UI + SESSION HANDLING
+// -----------------------------
+function updateAuthUI(session) {
+  const box = document.getElementById("auth-controls");
+  if (!box) return;
+
+  if (session?.user) {
+    box.innerHTML = `
+      <span>Logged in as ${session.user.email}</span>
+      <button id="logoutBtn" style="margin-left:10px;">Logout</button>
+    `;
+
+    document.getElementById("logoutBtn").onclick = async () => {
+      await client.auth.signOut();
+      location.reload();
+    };
+
+  } else {
+    box.innerHTML = `<button id="loginBtn">Login</button>`;
+
+    document.getElementById("loginBtn").onclick = () => {
+      const email = prompt("Enter your email:");
+      if (!email) return;
+
+      if (email.toLowerCase() !== "demonbeavis@gmail.com") {
+        alert("Viewing only. Editing requires admin access.");
+        return;
+      }
+
+      client.auth.signInWithOtp({ email });
+      alert("Magic login link sent!");
+    };
+  }
+}
+
+// Load session on page start
+client.auth.getSession().then(({ data }) => {
+  updateAuthUI(data.session);
+});
+
+// Listen for changes
+client.auth.onAuthStateChange((_event, session) => {
+  updateAuthUI(session);
+});
 async function loadStrip() {
   if (!stripId) {
     document.getElementById("main-strip").textContent = "No strip ID provided.";
